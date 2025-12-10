@@ -1,70 +1,143 @@
-# Getting Started with Create React App
+# 🦁 LionGains — Web App (React + Firebase + TailwindCSS)
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+LionGains is a fitness-focused web application built as a collaborative team project.  
+Our goal is to help Columbia students safely learn gym equipment, discover workouts, and find gym buddies.
 
-## Available Scripts
+This repository contains the initial project setup, authentication system, routing structure, and a fully functional global navbar.  
+Feature pages are scaffolded with TODO instructions for teammates to implement next.
 
-In the project directory, you can run:
+---
 
-### `npm start`
+## 1. Current Features Implemented
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### 1. Project Initialization
+- Created using **Create React App**
+- Installed and configured:
+  - **Firebase** (Authentication, Firestore, Storage)
+  - **React Router v6**
+  - **TailwindCSS v3**
+  - **Heroicons v2**
+  - GitHub repository setup & push
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+---
 
-### `npm test`
+### 2. Authentication
+- Firebase Authentication initialized
+- Login page implemented
+- Protected route system using `<ProtectedRoute />`
+- Redirect logic between `/login` and `/`
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+---
 
-### `npm run build`
+### 3. Global Navigation Bar
+- Fully implemented desktop-friendly top navbar
+- Light blue styling consistent across pages
+- Icons + labels change appearance based on active route
+- Appears on all pages except Login
+- Global spacing and layout adjustments added (`pt-16`)
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+---
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### 4. Routing Structure
+All major app routes are created and functional:
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+| Route        | Status               |
+|--------------|----------------------|
+| `/`          | Scaffolded (Home)    |
+| `/search`    | Scaffolded           |
+| `/upload`    | Scaffolded           |
+| `/gymbuddy`  | Scaffolded           |
+| `/profile`   | Scaffolded           |
+| `/login`     | Fully implemented    |
 
-### `npm run eject`
+---
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## Page Frameworks
+Each page includes:
+- A functional layout wrapper  
+- Navbar spacing  
+- A clear TODO comment block  
+- Placeholder UI  
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+Pages left to be implemented:
+- **Home**
+- **Search**
+- **GymBuddy**
+- **Profile**
+- **Upload**
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+---
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## 2. To-Dos
 
-## Learn More
+### Home Page
+- Fetch video feed from Firestore (`videos` collection)
+- Render `<VideoCard />` list
+- Implement infinite scrolling
+- Add tag filter functionality
+- Implement Settings button actions
+- Replace placeholder content
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+---
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### Search Page
+- Build search bar UI
+- Add filter chips (machines / body parts)
+- Render results list (machines or videos)
+- Debounced search logic
+- Possible integration with Firestore
 
-### Code Splitting
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+### GymBuddy Page
+- Build weekly availability grid UI
+- Save availability to Firestore
+- Implement matching algorithm
+- Show matched buddies list
 
-### Analyzing the Bundle Size
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+### Profile Page
+- Display user info (name, avatar, stats)
+- Edit profile UI
+- Display user’s uploaded videos
+- Add logout button
 
-### Making a Progressive Web App
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+### Upload Page
+- Build upload form
+- Upload videos to Firebase Storage
+- Save metadata (title, tags, timestamp) to Firestore
+- Implement progress bar
+- Tag selection UI (machine categories)
 
-### Advanced Configuration
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+## 🚀 Getting Started (Local Development)
 
-### Deployment
+### 1. Clone the repository
+```bash
+git clone https://github.com/NancyCLY/liongains.git
+cd liongains
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+### 2. Install dependencies
+```bash
+npm install
+```
 
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+### 3. Create your .env.local file
+We are using the same Firebase project that I have set up, so copy/paste the exact values below:
+```bash
+REACT_APP_FIREBASE_API_KEY=AIzaSyC7k4BJj-5x12B2Om7C-MncjPBQzwMt9NI
+REACT_APP_FIREBASE_AUTH_DOMAIN=liongains.firebaseapp.com
+REACT_APP_FIREBASE_PROJECT_ID=liongains
+REACT_APP_FIREBASE_STORAGE_BUCKET=liongains.firebasestorage.app
+REACT_APP_FIREBASE_MESSAGING_SENDER_ID=629931105040
+REACT_APP_FIREBASE_APP_ID=1:629931105040:web:d66d9b232146e721ece395
+```
+### 4. Start the development server
+```bash
+npm start
+```
