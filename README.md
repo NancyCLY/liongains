@@ -128,15 +128,8 @@ npm install
 ```
 
 ### 3. Create your .env.local file
-We are using the same Firebase project that I have set up, so copy/paste the exact values below:
-```bash
-REACT_APP_FIREBASE_API_KEY=AIzaSyC7k4BJj-5x12B2Om7C-MncjPBQzwMt9NI
-REACT_APP_FIREBASE_AUTH_DOMAIN=liongains.firebaseapp.com
-REACT_APP_FIREBASE_PROJECT_ID=liongains
-REACT_APP_FIREBASE_STORAGE_BUCKET=liongains.firebasestorage.app
-REACT_APP_FIREBASE_MESSAGING_SENDER_ID=629931105040
-REACT_APP_FIREBASE_APP_ID=1:629931105040:web:d66d9b232146e721ece395
-```
+We are using the same Firebase project that I have set up. Create a .env.local file in the project's root directory and copy/paste the credentails that I sent via email.
+
 ### 4. Start the development server
 ```bash
 npm start
