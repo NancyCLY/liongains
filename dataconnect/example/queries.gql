@@ -1,0 +1,38 @@
+mutation CreatePublicRoutine($name: String!, $description: String, $durationEstimateMinutes: Int, $isPublic: Boolean!) @auth(level: PUBLIC, insecureReason: "This mutation is safe to expose to the public.") {
+  routine_insert(data: {
+    name: $name,
+    description: $description,
+    durationEstimateMinutes: $durationEstimateMinutes,
+    isPublic: $isPublic,
+    userId_expr: "uuidV4()"
+  })
+}
+
+query ListPublicRoutines @auth(level: PUBLIC, insecureReason: "This query is safe to expose to the public.") {
+  routines(where: {isPublic: {eq: true}}) {
+    id
+    name
+    description
+    durationEstimateMinutes
+  }
+}
+
+mutation CreateUserRoutine($name: String!, $description: String, $durationEstimateMinutes: Int, $isPublic: Boolean!) @auth(level: USER) {
+  routine_insert(data: {
+    name: $name,
+    description: $description,
+    durationEstimateMinutes: $durationEstimateMinutes,
+    isPublic: $isPublic,
+    userId_expr: "auth.uid"
+  })
+}
+
+query ListUserRoutines @auth(level: USER) {
+  routines(where: {userId: {eq_expr: "auth.uid"}}) {
+    id
+    name
+    description
+    durationEstimateMinutes
+    isPublic
+  }
+}

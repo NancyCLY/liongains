@@ -1,0 +1,40 @@
+mutation SeedDatabase @auth(level: PUBLIC, insecureReason: "This operation is safe to expose to the public") @transaction {
+  user_insertMany(data: [
+    {
+      id: "550e8400-e29b-41d4-a716-446655440000",
+      bio: "I am a demo user",
+      createdAt: "2024-04-26T12:00:00Z",
+      displayName: "Demo User 1",
+      email: "demo1@example.com",
+      fitnessGoals: "Get stronger",
+      photoUrl: "https://example.com/avatar1.jpg"
+    },
+    {
+      id: "660e8400-e29b-41d4-a716-446655440001",
+      bio: "I am another demo user",
+      createdAt: "2024-04-27T14:00:00Z",
+      displayName: "Demo User 2",
+      email: "demo2@example.com",
+      fitnessGoals: "Lose weight",
+      photoUrl: "https://example.com/avatar2.jpg"
+    }
+  ])
+  exercise_insertMany(data: [
+    {
+      id: "770e8400-e29b-41d4-a716-446655440002",
+      createdAt: "2024-04-28T16:00:00Z",
+      description: "Bench press exercise",
+      equipmentNeeded: "Bench, barbell, weights",
+      muscleGroup: "Chest",
+      name: "Bench Press"
+    },
+    {
+      id: "880e8400-e29b-41d4-a716-446655440003",
+      createdAt: "2024-04-29T18:00:00Z",
+      description: "Squat exercise",
+      equipmentNeeded: "Barbell, weights",
+      muscleGroup: "Legs",
+      name: "Squat"
+    }
+  ])
+}
