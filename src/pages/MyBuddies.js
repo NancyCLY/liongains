@@ -7,6 +7,7 @@ import {
   getDocs,
   updateDoc,
   deleteField,
+  arrayUnion
 } from "firebase/firestore";
 import { db } from "../services/firebase";
 
@@ -35,6 +36,8 @@ export default function MyBuddies() {
   const [matches, setMatches] = useState([]);
   const [incomingRequests, setIncomingRequests] = useState([]);
   const [outgoingRequests, setOutgoingRequests] = useState([]);
+  const [openMenuBuddyId, setOpenMenuBuddyId] = useState(null);
+
 
   useEffect(() => {
     if (!currentUser) {
@@ -121,6 +124,47 @@ export default function MyBuddies() {
 
     loadBuddies();
   }, [currentUser]);
+
+  async function handleRemoveMatch(buddy) {
+  if (!currentUser) return;
+
+    const ok = window.confirm(
+      `Remove match with ${buddy.name}? This will also block them.`
+    );
+    if (!ok) return;
+
+    try {
+      const meRef = doc(db, "users", currentUser.uid);
+      const buddyRef = doc(db, "users", buddy.id);
+
+      await updateDoc(meRef, {
+        // remove match
+        [`buddyMatches.${buddy.id}`]: deleteField(),
+        // block
+        blockedBuddies: arrayUnion(buddy.id),
+
+        // optional cleanup (recommended)
+        [`incomingRequests.${buddy.id}`]: deleteField(),
+        [`outgoingRequests.${buddy.id}`]: deleteField(),
+      });
+
+      await updateDoc(buddyRef, {
+        [`buddyMatches.${currentUser.uid}`]: deleteField(),
+        blockedBuddies: arrayUnion(currentUser.uid),
+
+        // optional cleanup (recommended)
+        [`incomingRequests.${currentUser.uid}`]: deleteField(),
+        [`outgoingRequests.${currentUser.uid}`]: deleteField(),
+      });
+
+      // update UI
+      setMatches((prev) => prev.filter((b) => b.id !== buddy.id));
+    } catch (err) {
+      console.error("Error removing match:", err);
+      alert("Failed to remove match.");
+    }
+  }
+
 
   function handleStartChat(buddy) {
     // TODO: Replace with real navigation to chat screen
@@ -221,7 +265,7 @@ export default function MyBuddies() {
   }
 
   // ---------- UI components ----------
-  function BuddyCard({ buddy, label, rightAction, rightAlign = "center" }) {
+  function BuddyCard({ buddy, label, topRight, bottomRight, rightAlign = "center" }) {
     const initials = getInitials(buddy.name || buddy.email);
 
     const rightAlignClass =
@@ -236,8 +280,9 @@ export default function MyBuddies() {
           </div>
         </div>
 
-        {/* Right side */}
+        {/* Content + right side */}
         <div className="flex-1 flex items-stretch">
+          {/* Left / middle content */}
           <div className="flex flex-col justify-center flex-1 max-w-[260px]">
             <h2 className="text-sm font-semibold text-slate-900 truncate">
               {buddy.name}
@@ -260,19 +305,19 @@ export default function MyBuddies() {
               </div>
             )}
 
-            {label && (
-              <p className="mt-2 text-[11px] text-slate-500">{label}</p>
-            )}
+            {label && <p className="mt-2 text-[11px] text-slate-500">{label}</p>}
           </div>
 
-          {/* Actions aligned right */}
+          {/* Right column: top-right menu + bottom-right button */}
           <div className={`flex flex-col ${rightAlignClass} items-end ml-4`}>
-            {rightAction}
+            <div className="w-full flex justify-end">{topRight}</div>
+            <div className="mt-auto">{bottomRight}</div>
           </div>
         </div>
       </article>
     );
   }
+
 
 
   // ---------- Rendering ----------
@@ -332,7 +377,37 @@ export default function MyBuddies() {
                   key={buddy.id}
                   buddy={buddy}
                   label="You both reached out. Ready to train together!"
-                  rightAction={
+                  topRight={
+                    <div className="relative">
+                      <button
+                        type="button"
+                        className="p-2 rounded-full hover:bg-slate-100 text-slate-500"
+                        onClick={() =>
+                          setOpenMenuBuddyId((prev) => (prev === buddy.id ? null : buddy.id))
+                        }
+                        aria-label="Open menu"
+                        title="More"
+                      >
+                        •••
+                      </button>
+
+                      {openMenuBuddyId === buddy.id && (
+                        <div className="absolute right-0 mt-2 w-40 bg-white border border-slate-200 rounded-md shadow-lg text-xs z-10">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setOpenMenuBuddyId(null);
+                              handleRemoveMatch(buddy);
+                            }}
+                            className="w-full text-left px-3 py-2 hover:bg-slate-50 text-red-600"
+                          >
+                            Remove match
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  }
+                  bottomRight={
                     <button
                       type="button"
                       onClick={() => handleStartChat(buddy)}
@@ -343,6 +418,7 @@ export default function MyBuddies() {
                   }
                 />
               ))}
+
             </div>
           </section>
         )}
