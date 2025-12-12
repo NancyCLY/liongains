@@ -1,18 +1,28 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import { collection, doc, getDoc, getDocs } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  updateDoc,
+  deleteField,
+} from "firebase/firestore";
 import { db } from "../services/firebase";
+
+function formatShortDate(isoDate) {
+  if (!isoDate) return "";
+  const d = new Date(`${isoDate}T00:00:00`);
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" }); // "Dec 15"
+}
+
 
 function getInitials(nameOrEmail = "") {
   if (!nameOrEmail) return "?";
-
-  // If there's an @, it's probably an email – use the part before @
   const base = nameOrEmail.split("@")[0];
-
   const parts = base.split(/[.\s_]/).filter(Boolean);
-  if (parts.length === 0) return base[0].toUpperCase();
+  if (parts.length === 0) return base[0]?.toUpperCase() ?? "?";
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-
   return (parts[0][0] + parts[1][0]).toUpperCase();
 }
 
@@ -38,7 +48,6 @@ export default function MyBuddies() {
         setLoading(true);
         setError("");
 
-        // 1. Load current user doc
         const meRef = doc(db, "users", currentUser.uid);
         const meSnap = await getDoc(meRef);
 
@@ -49,15 +58,18 @@ export default function MyBuddies() {
         }
 
         const meData = meSnap.data();
-        const reachedOutList = meData.reachedOutBuddies || [];
-        const buddyRequestsList = meData.buddyRequests || [];
+
+        // ✅ Maps now:
+        // outgoingRequests: { [buddyId]: { session: {...} } }
+        // incomingRequests: { [buddyId]: { session: {...} } }
+        const outgoingMap = meData.outgoingRequests || {};
+        const incomingMap = meData.incomingRequests || {};
         const blockedList = meData.blockedBuddies || [];
 
-        const reachedOutSet = new Set(reachedOutList);
-        const requestsSet = new Set(buddyRequestsList);
+        const outgoingSet = new Set(Object.keys(outgoingMap));
+        const incomingSet = new Set(Object.keys(incomingMap));
         const blockedSet = new Set(blockedList);
 
-        // 2. Load all users and classify relationships
         const usersSnap = await getDocs(collection(db, "users"));
 
         const matchesArr = [];
@@ -66,32 +78,32 @@ export default function MyBuddies() {
 
         usersSnap.forEach((uDoc) => {
           const id = uDoc.id;
-          if (id === currentUser.uid) return; // skip self
-          if (blockedSet.has(id)) return; // skip blocked
+          if (id === currentUser.uid) return;
+          if (blockedSet.has(id)) return;
 
           const data = uDoc.data();
-          const name = data.name || data.email || "GymBuddy user";
+          const name = data.username || data.email || "GymBuddy user";
           const email = data.email || "";
           const preferences = data.preferences || [];
 
-          const reachedOut = reachedOutSet.has(id);
-          const requestedMe = requestsSet.has(id);
+          const isOutgoing = outgoingSet.has(id);
+          const isIncoming = incomingSet.has(id);
 
           const baseInfo = {
             id,
             name,
             email,
             preferences,
+            incomingSession: incomingMap[id]?.session ?? null,
+            outgoingSession: outgoingMap[id]?.session ?? null,
           };
 
-          if (reachedOut && requestedMe) {
-            // mutual -> real match
+          // Prioritize matches first
+          if (isOutgoing && isIncoming) {
             matchesArr.push(baseInfo);
-          } else if (requestedMe) {
-            // they reached out to me, I haven't yet
+          } else if (isIncoming) {
             incomingArr.push(baseInfo);
-          } else if (reachedOut) {
-            // I reached out to them, waiting
+          } else if (isOutgoing) {
             outgoingArr.push(baseInfo);
           }
         });
@@ -115,10 +127,105 @@ export default function MyBuddies() {
     alert(`Start chat with ${buddy.name}`);
   }
 
-  // ---------- UI components ----------
+  // ✅ Accept: write outgoingRequests.<buddyId> using the session from incomingRequests.<buddyId>
+  // This makes it a match because it will now exist in BOTH maps.
+  async function handleAcceptRequest(buddy) {
+    if (!currentUser) return;
 
-  function BuddyCard({ buddy, label, buttonText, buttonDisabled }) {
+    try {
+      const meRef = doc(db, "users", currentUser.uid);
+      const buddyRef = doc(db, "users", buddy.id);
+
+      const sessionToUse = buddy.incomingSession;
+      if (!sessionToUse) {
+        alert("No session found for this request.");
+        return;
+      }
+
+      // 1) For ME:
+      //    - mark outgoingRequests.<buddyId> so this becomes a "match"
+      //    - add/update buddyMatches.<buddyId> with the matched session
+      const meUpdate = updateDoc(meRef, {
+        [`outgoingRequests.${buddy.id}`]: { session: sessionToUse },
+        [`buddyMatches.${buddy.id}`]: { session: sessionToUse },
+      });
+
+      // 2) For BUDDY:
+      //    - add/update buddyMatches.<myUid> with the same matched session
+      //      (so they also see me in their "My buddies" page)
+      const buddyUpdate = updateDoc(buddyRef, {
+        [`buddyMatches.${currentUser.uid}`]: { session: sessionToUse },
+      });
+
+      await Promise.all([meUpdate, buddyUpdate]);
+
+      // 3) Update local UI state
+      setIncomingRequests((prev) => prev.filter((b) => b.id !== buddy.id));
+      setMatches((prev) => [
+        { ...buddy, outgoingSession: sessionToUse },
+        ...prev,
+      ]);
+    } catch (err) {
+      console.error("Error accepting request:", err);
+      alert("Failed to accept request.");
+    }
+  }
+
+
+  // ✅ Decline: remove incomingRequests.<buddyId> from me,
+  // and remove outgoingRequests.<myUid> from the buddy (so it disappears for them too).
+  async function handleDeclineRequest(buddy) {
+    if (!currentUser) return;
+
+    try {
+      const meRef = doc(db, "users", currentUser.uid);
+      const buddyRef = doc(db, "users", buddy.id);
+
+      await updateDoc(meRef, {
+        [`incomingRequests.${buddy.id}`]: deleteField(),
+      });
+
+      await updateDoc(buddyRef, {
+        [`outgoingRequests.${currentUser.uid}`]: deleteField(),
+      });
+
+      setIncomingRequests((prev) => prev.filter((b) => b.id !== buddy.id));
+    } catch (err) {
+      console.error("Error declining request:", err);
+      alert("Failed to decline request.");
+    }
+  }
+
+  // ✅ Cancel: remove outgoingRequests.<buddyId> from me,
+  // and remove incomingRequests.<myUid> from buddy.
+  async function handleCancelRequest(buddy) {
+    if (!currentUser) return;
+
+    try {
+      const meRef = doc(db, "users", currentUser.uid);
+      const buddyRef = doc(db, "users", buddy.id);
+
+      await updateDoc(meRef, {
+        [`outgoingRequests.${buddy.id}`]: deleteField(),
+      });
+
+      await updateDoc(buddyRef, {
+        [`incomingRequests.${currentUser.uid}`]: deleteField(),
+      });
+
+      setOutgoingRequests((prev) => prev.filter((b) => b.id !== buddy.id));
+    } catch (err) {
+      console.error("Error cancelling request:", err);
+      alert("Failed to cancel request.");
+    }
+  }
+
+  // ---------- UI components ----------
+  function BuddyCard({ buddy, label, rightAction, rightAlign = "center" }) {
     const initials = getInitials(buddy.name || buddy.email);
+
+    const rightAlignClass =
+      rightAlign === "bottom" ? "justify-end" : "justify-center";
 
     return (
       <article className="bg-white rounded-2xl shadow-sm border border-slate-100 px-6 py-4 flex gap-5">
@@ -135,10 +242,9 @@ export default function MyBuddies() {
             <h2 className="text-sm font-semibold text-slate-900 truncate">
               {buddy.name}
             </h2>
+
             {buddy.email && (
-              <p className="text-xs text-slate-500 truncate">
-                {buddy.email}
-              </p>
+              <p className="text-xs text-slate-500 truncate">{buddy.email}</p>
             )}
 
             {buddy.preferences?.length > 0 && (
@@ -159,28 +265,17 @@ export default function MyBuddies() {
             )}
           </div>
 
-          {/* Button aligned right */}
-          <div className="flex flex-col justify-center items-end ml-4">
-            <button
-              type="button"
-              disabled={buttonDisabled}
-              onClick={() => handleStartChat(buddy)}
-              className={`px-4 py-1.5 rounded-full text-xs font-semibold transition shadow-sm ${
-                buttonDisabled
-                  ? "bg-slate-200 text-slate-500 cursor-not-allowed"
-                  : "bg-blue-600 text-white hover:bg-blue-700"
-              }`}
-            >
-              {buttonText}
-            </button>
+          {/* Actions aligned right */}
+          <div className={`flex flex-col ${rightAlignClass} items-end ml-4`}>
+            {rightAction}
           </div>
         </div>
       </article>
     );
   }
 
-  // ---------- Rendering ----------
 
+  // ---------- Rendering ----------
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 pt-20 pb-10">
@@ -237,8 +332,15 @@ export default function MyBuddies() {
                   key={buddy.id}
                   buddy={buddy}
                   label="You both reached out. Ready to train together!"
-                  buttonText="Start chat"
-                  buttonDisabled={false}
+                  rightAction={
+                    <button
+                      type="button"
+                      onClick={() => handleStartChat(buddy)}
+                      className="px-4 py-1.5 rounded-full text-xs font-semibold transition shadow-sm bg-blue-600 text-white hover:bg-blue-700"
+                    >
+                      Start chat
+                    </button>
+                  }
                 />
               ))}
             </div>
@@ -256,9 +358,31 @@ export default function MyBuddies() {
                 <BuddyCard
                   key={buddy.id}
                   buddy={buddy}
-                  label="This buddy reached out to you."
-                  buttonText="Start chat"
-                  buttonDisabled={true} // for now; you can later add Accept/Match
+                  label={`Requested: (${formatShortDate(
+                    buddy.incomingSession?.date
+                  )}) ${buddy.incomingSession?.label ?? "session"}`}
+                  rightAction={
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleAcceptRequest(buddy)}
+                        className="w-9 h-9 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-sm hover:bg-emerald-600"
+                        title="Accept"
+                        aria-label="Accept"
+                      >
+                        ✓
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeclineRequest(buddy)}
+                        className="w-9 h-9 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center shadow-sm hover:bg-slate-300"
+                        title="Decline"
+                        aria-label="Decline"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  }
                 />
               ))}
             </div>
@@ -276,9 +400,19 @@ export default function MyBuddies() {
                 <BuddyCard
                   key={buddy.id}
                   buddy={buddy}
-                  label="You've reached out. Waiting for them to respond."
-                  buttonText="Pending"
-                  buttonDisabled={true}
+                  label={`Requested: (${formatShortDate(
+                    buddy.outgoingSession?.date
+                  )}) ${buddy.outgoingSession?.label ?? "session"}`}
+                  rightAlign="bottom"
+                  rightAction={
+                    <button
+                      type="button"
+                      onClick={() => handleCancelRequest(buddy)}
+                      className="px-4 py-1.5 rounded-full text-xs font-semibold bg-red-50 text-red-600 border border-red-200 hover:bg-red-100"
+                    >
+                      Cancel
+                    </button>
+                  }
                 />
               ))}
             </div>

@@ -79,10 +79,11 @@ export default function FoundBuddies() {
   const [buddies, setBuddies] = useState([]); // [{ id, name, preferences, overlappingSessions, overlapCount }]
   const [showAllSessions, setShowAllSessions] = useState({}); // buddyId -> bool
   const [selectedSessionByBuddy, setSelectedSessionByBuddy] = useState({}); // buddyId -> sessionId
-  const [existingReachedOutIds, setExistingReachedOutIds] = useState(
-    new Set()
-  ); // from Firestore
+
+  // now represents buddyIds you've already requested (from map keys)
+  const [existingReachedOutIds, setExistingReachedOutIds] = useState(new Set());
   const [newReachedOutIds, setNewReachedOutIds] = useState(new Set()); // from this screen
+
   const [openMenuBuddyId, setOpenMenuBuddyId] = useState(null);
 
   useEffect(() => {
@@ -108,11 +109,13 @@ export default function FoundBuddies() {
 
         const userData = userSnap.data();
         const currentAvailability = userData.availability || {};
-        const reachedOutList = userData.reachedOutBuddies || [];
-        const blockedList = userData.blockedBuddies || [];
 
-        const reachedOutSet = new Set(reachedOutList);
+        // ✅ outgoingRequests is now a MAP: { [buddyId]: { session: ... } }
+        const outgoingMap = userData.outgoingRequests || {};
+        const reachedOutSet = new Set(Object.keys(outgoingMap));
         setExistingReachedOutIds(reachedOutSet);
+
+        const blockedList = userData.blockedBuddies || [];
 
         // Fetch all users
         const usersSnap = await getDocs(collection(db, "users"));
@@ -156,8 +159,7 @@ export default function FoundBuddies() {
     loadMatches();
   }, [currentUser]);
 
-  const totalReachedOut =
-    existingReachedOutIds.size + newReachedOutIds.size;
+  const totalReachedOut = existingReachedOutIds.size + newReachedOutIds.size;
 
   function toggleShowAllSessions(buddyId) {
     setShowAllSessions((prev) => ({
@@ -178,25 +180,40 @@ export default function FoundBuddies() {
 
     const buddyId = buddy.id;
     const sessionId = selectedSessionByBuddy[buddyId];
-    if (!sessionId) return; // guard
+    if (!sessionId) return;
 
     const alreadyReached =
-      existingReachedOutIds.has(buddyId) ||
-      newReachedOutIds.has(buddyId);
+      existingReachedOutIds.has(buddyId) || newReachedOutIds.has(buddyId);
 
-    if (!alreadyReached && totalReachedOut >= MAX_BUDDIES_TOTAL) {
-      return;
-    }
+    if (!alreadyReached && totalReachedOut >= MAX_BUDDIES_TOTAL) return;
+
+    // ✅ find the chosen overlap session object
+    const chosenSession = buddy.overlappingSessions.find(
+      (s) => s.id === sessionId
+    );
+    if (!chosenSession) return;
+
+    const payload = {
+      session: {
+        id: chosenSession.id,
+        date: chosenSession.date,
+        hour: chosenSession.hour,
+        label: chosenSession.label,
+      },
+    };
 
     try {
       const userRef = doc(db, "users", currentUser.uid);
+      const buddyRef = doc(db, "users", buddyId);
+
+      // ✅ outgoingRequests is a MAP: outgoingRequests.<buddyId> = payload
       await updateDoc(userRef, {
-        reachedOutBuddies: arrayUnion(buddyId),
+        [`outgoingRequests.${buddyId}`]: payload,
       });
 
-      const buddyRef = doc(db, "users", buddyId);
+      // ✅ buddy's incomingRequests is a MAP: incomingRequests.<myUid> = payload
       await updateDoc(buddyRef, {
-        buddyRequests: arrayUnion(currentUser.uid),
+        [`incomingRequests.${currentUser.uid}`]: payload,
       });
 
       setNewReachedOutIds((prev) => {
@@ -205,12 +222,7 @@ export default function FoundBuddies() {
         return next;
       });
 
-      alert(
-        `You reached out to ${buddy.name} for session: ${
-          buddy.overlappingSessions.find((s) => s.id === sessionId)?.label ||
-          ""
-        }`
-      );
+      alert(`You reached out to ${buddy.name} for session: ${chosenSession.label}`);
     } catch (err) {
       console.error("Error reaching out:", err);
       alert("There was an error sending your request.");
@@ -303,9 +315,7 @@ export default function FoundBuddies() {
               (!alreadyReached && totalReachedOut >= MAX_BUDDIES_TOTAL);
 
             let helperText = "";
-            if (!hasSelectedSession) {
-              helperText = "";
-            } else if (totalReachedOut >= MAX_BUDDIES_TOTAL && !alreadyReached) {
+            if (totalReachedOut >= MAX_BUDDIES_TOTAL && !alreadyReached) {
               helperText = `Limit of ${MAX_BUDDIES_TOTAL} buddies reached.`;
             }
 
@@ -326,9 +336,7 @@ export default function FoundBuddies() {
                   </div>
                 </div>
 
-                {/* Middle + right columns */}
                 <div className="flex-1 flex items-stretch">
-                  {/* Middle column: name + sessions + helper text */}
                   <div className="flex flex-col justify-center flex-1 max-w-[240px]">
                     <h2 className="text-sm font-semibold text-slate-900 mb-1 truncate">
                       {buddy.name}
@@ -381,16 +389,15 @@ export default function FoundBuddies() {
                           +{remainingCount} more
                         </button>
                       )}
-                      {showAll &&
-                        buddy.overlappingSessions.length > 2 && (
-                          <button
-                            type="button"
-                            onClick={() => toggleShowAllSessions(buddy.id)}
-                            className="text-[11px] text-blue-600 underline ml-1"
-                          >
-                            show less
-                          </button>
-                        )}
+                      {showAll && buddy.overlappingSessions.length > 2 && (
+                        <button
+                          type="button"
+                          onClick={() => toggleShowAllSessions(buddy.id)}
+                          className="text-[11px] text-blue-600 underline ml-1"
+                        >
+                          show less
+                        </button>
+                      )}
                     </div>
 
                     {helperText && (
@@ -400,7 +407,6 @@ export default function FoundBuddies() {
                     )}
                   </div>
 
-                  {/* Right column: three-dot menu + reach-out button */}
                   <div className="flex flex-col justify-between items-end ml-4 mr-6">
                     {/* Menu */}
                     <div className="relative">
