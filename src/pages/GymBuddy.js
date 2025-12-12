@@ -15,6 +15,8 @@ import { useState } from 'react';
 import { useAuth } from "../context/AuthContext";
 import { db, storage } from "../services/firebase";
 import { collection, getDocs,setDoc, getDoc, updateDoc, doc } from 'firebase/firestore';
+import { useNavigate } from "react-router-dom";
+
 
 
 
@@ -76,6 +78,8 @@ function getNext7DaysFromTomorrow() {
 
 export default function GymBuddy() {
 
+
+  const navigate = useNavigate();
   const { currentUser } = useAuth();
 
   const DAYS = getNext7DaysFromTomorrow();
@@ -223,6 +227,8 @@ export default function GymBuddy() {
         });
 
         alert("Your availability has been updated!");
+
+        navigate("/foundbuddies");
       } catch (err) {
         console.error("Error updating availability:", err);
         alert("There was an error saving your availability.");
@@ -232,7 +238,9 @@ export default function GymBuddy() {
         uid: currentUser.uid,
         email: currentUser.email,
         availability: newAvailability,
-    });
+      });
+      navigate("/foundbuddies");
+
     }
   }
 

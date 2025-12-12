@@ -6,6 +6,7 @@ import Profile from "./pages/Profile";
 import GymBuddy from "./pages/GymBuddy";
 import Upload from "./pages/Upload";
 import Login from "./pages/Login";
+import FoundBuddies from "./pages/FoundBuddies";
 
 import Navbar from "./components/Navbar";
 
@@ -33,6 +34,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <GymBuddy />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/foundbuddies"
+              element={
+                <ProtectedRoute>
+                  <FoundBuddies />
                 </ProtectedRoute>
               }
             />
