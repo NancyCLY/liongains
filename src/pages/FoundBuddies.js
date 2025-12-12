@@ -133,7 +133,7 @@ export default function FoundBuddies() {
 
           allMatches.push({
             id: buddyDoc.id,
-            name: data.name || data.email || "GymBuddy user",
+            name: data.username || data.email || "Gym Buddy",
             preferences: data.preferences || [],
             overlappingSessions: overlaps,
             overlapCount: overlaps.length,
@@ -192,6 +192,11 @@ export default function FoundBuddies() {
       const userRef = doc(db, "users", currentUser.uid);
       await updateDoc(userRef, {
         reachedOutBuddies: arrayUnion(buddyId),
+      });
+
+      const buddyRef = doc(db, "users", buddyId);
+      await updateDoc(buddyRef, {
+        buddyRequests: arrayUnion(currentUser.uid),
       });
 
       setNewReachedOutIds((prev) => {
