@@ -402,34 +402,63 @@ export default function MyBuddies() {
               Matches
             </h2>
             <div className="space-y-3">
-              {matches.map((buddy) => (
-                <BuddyCard
-                  key={buddy.id}
-                  buddy={buddy}
-                  label="You both reached out. Ready to train together!"
-                  topRight={
-                    <ThreeDotMenu
-                      buddy={buddy}
-                      items={[
-                        {
-                          label: "Remove match",
-                          danger: true,
-                          onClick: () => handleRemoveMatch(buddy),
-                        },
-                      ]}
-                    />
-                  }
-                  bottomRight={
-                    <button
-                      type="button"
-                      onClick={() => handleStartChat(buddy)}
-                      className="px-4 py-1.5 rounded-full text-xs font-semibold transition shadow-sm bg-blue-600 text-white hover:bg-blue-700"
-                    >
-                      Start chat
-                    </button>
-                  }
-                />
-              ))}
+              {matches.map((buddy) => {
+                const matchedSession =
+                  buddy.outgoingSession || buddy.incomingSession || null;
+
+                const matchLabel = matchedSession
+                  ? `Matched: (${formatShortDate(matchedSession.date)}) ${matchedSession.label}`
+                  : "You both reached out. Ready to train together!";
+
+                return (
+                  <BuddyCard
+                    key={buddy.id}
+                    buddy={buddy}
+                    label={matchLabel}
+                    topRight={
+                      <div className="relative">
+                        <button
+                          type="button"
+                          className="p-2 rounded-full hover:bg-slate-100 text-slate-500"
+                          onClick={() =>
+                            setOpenMenuBuddyId((prev) =>
+                              prev === buddy.id ? null : buddy.id
+                            )
+                          }
+                          aria-label="Open menu"
+                          title="More"
+                        >
+                          •••
+                        </button>
+
+                        {openMenuBuddyId === buddy.id && (
+                          <div className="absolute right-0 mt-2 w-40 bg-white border border-slate-200 rounded-md shadow-lg text-xs z-10">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setOpenMenuBuddyId(null);
+                                handleRemoveMatch(buddy);
+                              }}
+                              className="w-full text-left px-3 py-2 hover:bg-slate-50 text-red-600"
+                            >
+                              Remove match
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    }
+                    bottomRight={
+                      <button
+                        type="button"
+                        onClick={() => handleStartChat(buddy)}
+                        className="px-4 py-1.5 rounded-full text-xs font-semibold transition shadow-sm bg-blue-600 text-white hover:bg-blue-700"
+                      >
+                        Start chat
+                      </button>
+                    }
+                  />
+                );
+              })}
             </div>
           </section>
         )}
