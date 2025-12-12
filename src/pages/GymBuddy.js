@@ -14,7 +14,7 @@
 import { useState } from 'react';
 import { useAuth } from "../context/AuthContext";
 import { db, storage } from "../services/firebase";
-import { collection, getDocs, getDoc, updateDoc, doc } from 'firebase/firestore';
+import { collection, getDocs,setDoc, getDoc, updateDoc, doc } from 'firebase/firestore';
 
 
 
@@ -137,6 +137,29 @@ export default function GymBuddy() {
     });
   }
 
+  async function saveUserPreferences(currentUser, preferences) {
+    if (!currentUser) {
+      throw new Error("No authenticated user");
+    }
+
+    if (!Array.isArray(preferences)) {
+      throw new Error("preferences must be an array of strings");
+    }
+
+    const userRef = doc(db, "users", currentUser.uid);
+
+    await setDoc(
+      userRef,
+      {
+        uid: currentUser.uid,
+        email: currentUser.email ?? null,
+        preferences: preferences, // e.g. ["legs-day", "mornings", "cardio"]
+        updatedAt: new Date(),
+      },
+      { merge: true } // 👈 creates the doc if it doesn't exist, updates if it does
+    );
+  }
+
   async function handleMatch() {
     // Build a quick lookup map from isoDate → { label, displayDate }
     const dayMap = Object.fromEntries(
@@ -182,29 +205,35 @@ export default function GymBuddy() {
       newAvailability[date].sort((a, b) => a - b);
     }
 
+    saveUserPreferences(currentUser, Array.from(selectedPrefs));
+
     // 3. Overwrite the user's availability in Firestore
     if (!currentUser) {
       alert("You must be logged in to save availability.");
       return;
     }
 
-    const userRef = doc(db, "users", currentUser.uid);
+    const userRef = doc(db, "users", currentUser.uid); 
+    const userSnap = await getDoc(userRef);
+    if (userSnap.exists()) {
+    // User already exists → update only the relevant fields
+      try {
+        await updateDoc(userRef, {
+          availability: newAvailability, // map<string, number[]>
+        });
 
-    try {
-      await updateDoc(userRef, {
-        availability: newAvailability, // map<string, number[]>
-      });
-
-      alert("Your availability has been updated!");
-    } catch (err) {
-      console.error("Error updating availability:", err);
-      alert("There was an error saving your availability.");
+        alert("Your availability has been updated!");
+      } catch (err) {
+        console.error("Error updating availability:", err);
+        alert("There was an error saving your availability.");
+      }
+    } else {
+      await setDoc(userRef, {
+        uid: currentUser.uid,
+        email: currentUser.email,
+        availability: newAvailability,
+    });
     }
-
-    console.log("availability!!!");
-    console.log(newAvailability);
-
-    
   }
 
   
