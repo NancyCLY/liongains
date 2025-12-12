@@ -110,22 +110,45 @@ export default function FoundBuddies() {
         const userData = userSnap.data();
         const currentAvailability = userData.availability || {};
 
-        // ✅ outgoingRequests is now a MAP: { [buddyId]: { session: ... } }
-        const outgoingMap = userData.outgoingRequests || {};
+        // ✅ outgoing/incoming are MAPS now
+        const outgoingMap = userData.outgoingRequests || {}; // { [buddyId]: {session...} }
+        const incomingMap = userData.incomingRequests || {}; // { [buddyId]: {session...} }  (keyed by buddyId on *your* doc)
+        const matchesMap = userData.buddyMatches || {}; // { [buddyId]: {...} }
+
         const reachedOutSet = new Set(Object.keys(outgoingMap));
         setExistingReachedOutIds(reachedOutSet);
 
         const blockedList = userData.blockedBuddies || [];
+        const blockedSet = new Set(blockedList);
+
+        // ✅ Build ONE exclude set:
+        // - blocked
+        // - already requested (either direction)
+        // - already matched
+        const excludeSet = new Set([
+          ...blockedList,
+          ...Object.keys(outgoingMap),
+          ...Object.keys(incomingMap),
+          ...Object.keys(matchesMap),
+        ]);
 
         // Fetch all users
         const usersSnap = await getDocs(collection(db, "users"));
         const allMatches = [];
 
         usersSnap.forEach((buddyDoc) => {
-          if (buddyDoc.id === currentUser.uid) return; // skip self
-          if (blockedList.includes(buddyDoc.id)) return; // skip blocked
+          const buddyId = buddyDoc.id;
+
+          if (buddyId === currentUser.uid) return; // skip self
+          if (excludeSet.has(buddyId)) return; // ✅ skip blocked/requested/matched
 
           const data = buddyDoc.data();
+
+          // ✅ ALSO skip if THEY blocked ME
+          const theyBlockedMe =
+            (data.blockedBuddies || []).includes(currentUser.uid);
+          if (theyBlockedMe) return;
+
           const buddyAvailability = data.availability || {};
           const overlaps = computeAllOverlappingSessions(
             currentAvailability,
@@ -135,7 +158,7 @@ export default function FoundBuddies() {
           if (overlaps.length === 0) return;
 
           allMatches.push({
-            id: buddyDoc.id,
+            id: buddyId,
             name: data.username || data.email || "Gym Buddy",
             preferences: data.preferences || [],
             overlappingSessions: overlaps,
@@ -187,7 +210,6 @@ export default function FoundBuddies() {
 
     if (!alreadyReached && totalReachedOut >= MAX_BUDDIES_TOTAL) return;
 
-    // ✅ find the chosen overlap session object
     const chosenSession = buddy.overlappingSessions.find(
       (s) => s.id === sessionId
     );
@@ -206,12 +228,10 @@ export default function FoundBuddies() {
       const userRef = doc(db, "users", currentUser.uid);
       const buddyRef = doc(db, "users", buddyId);
 
-      // ✅ outgoingRequests is a MAP: outgoingRequests.<buddyId> = payload
       await updateDoc(userRef, {
         [`outgoingRequests.${buddyId}`]: payload,
       });
 
-      // ✅ buddy's incomingRequests is a MAP: incomingRequests.<myUid> = payload
       await updateDoc(buddyRef, {
         [`incomingRequests.${currentUser.uid}`]: payload,
       });
@@ -222,7 +242,12 @@ export default function FoundBuddies() {
         return next;
       });
 
-      alert(`You reached out to ${buddy.name} for session: ${chosenSession.label}`);
+      alert(
+        `You reached out to ${buddy.name} for session: ${chosenSession.label}`
+      );
+
+      // Optional: immediately remove from the list after reaching out
+      // setBuddies((prev) => prev.filter((b) => b.id !== buddyId));
     } catch (err) {
       console.error("Error reaching out:", err);
       alert("There was an error sending your request.");

@@ -7,16 +7,15 @@ import {
   getDocs,
   updateDoc,
   deleteField,
-  arrayUnion
+  arrayUnion,
 } from "firebase/firestore";
 import { db } from "../services/firebase";
 
 function formatShortDate(isoDate) {
   if (!isoDate) return "";
   const d = new Date(`${isoDate}T00:00:00`);
-  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" }); // "Dec 15"
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
-
 
 function getInitials(nameOrEmail = "") {
   if (!nameOrEmail) return "?";
@@ -36,8 +35,8 @@ export default function MyBuddies() {
   const [matches, setMatches] = useState([]);
   const [incomingRequests, setIncomingRequests] = useState([]);
   const [outgoingRequests, setOutgoingRequests] = useState([]);
-  const [openMenuBuddyId, setOpenMenuBuddyId] = useState(null);
 
+  const [openMenuBuddyId, setOpenMenuBuddyId] = useState(null);
 
   useEffect(() => {
     if (!currentUser) {
@@ -62,9 +61,6 @@ export default function MyBuddies() {
 
         const meData = meSnap.data();
 
-        // ✅ Maps now:
-        // outgoingRequests: { [buddyId]: { session: {...} } }
-        // incomingRequests: { [buddyId]: { session: {...} } }
         const outgoingMap = meData.outgoingRequests || {};
         const incomingMap = meData.incomingRequests || {};
         const blockedList = meData.blockedBuddies || [];
@@ -101,7 +97,6 @@ export default function MyBuddies() {
             outgoingSession: outgoingMap[id]?.session ?? null,
           };
 
-          // Prioritize matches first
           if (isOutgoing && isIncoming) {
             matchesArr.push(baseInfo);
           } else if (isIncoming) {
@@ -125,8 +120,10 @@ export default function MyBuddies() {
     loadBuddies();
   }, [currentUser]);
 
+  // ---------- Firestore actions ----------
+
   async function handleRemoveMatch(buddy) {
-  if (!currentUser) return;
+    if (!currentUser) return;
 
     const ok = window.confirm(
       `Remove match with ${buddy.name}? This will also block them.`
@@ -138,12 +135,8 @@ export default function MyBuddies() {
       const buddyRef = doc(db, "users", buddy.id);
 
       await updateDoc(meRef, {
-        // remove match
         [`buddyMatches.${buddy.id}`]: deleteField(),
-        // block
         blockedBuddies: arrayUnion(buddy.id),
-
-        // optional cleanup (recommended)
         [`incomingRequests.${buddy.id}`]: deleteField(),
         [`outgoingRequests.${buddy.id}`]: deleteField(),
       });
@@ -151,28 +144,18 @@ export default function MyBuddies() {
       await updateDoc(buddyRef, {
         [`buddyMatches.${currentUser.uid}`]: deleteField(),
         blockedBuddies: arrayUnion(currentUser.uid),
-
-        // optional cleanup (recommended)
         [`incomingRequests.${currentUser.uid}`]: deleteField(),
         [`outgoingRequests.${currentUser.uid}`]: deleteField(),
       });
 
-      // update UI
       setMatches((prev) => prev.filter((b) => b.id !== buddy.id));
+      setOpenMenuBuddyId(null);
     } catch (err) {
       console.error("Error removing match:", err);
       alert("Failed to remove match.");
     }
   }
 
-
-  function handleStartChat(buddy) {
-    // TODO: Replace with real navigation to chat screen
-    alert(`Start chat with ${buddy.name}`);
-  }
-
-  // ✅ Accept: write outgoingRequests.<buddyId> using the session from incomingRequests.<buddyId>
-  // This makes it a match because it will now exist in BOTH maps.
   async function handleAcceptRequest(buddy) {
     if (!currentUser) return;
 
@@ -186,38 +169,26 @@ export default function MyBuddies() {
         return;
       }
 
-      // 1) For ME:
-      //    - mark outgoingRequests.<buddyId> so this becomes a "match"
-      //    - add/update buddyMatches.<buddyId> with the matched session
       const meUpdate = updateDoc(meRef, {
         [`outgoingRequests.${buddy.id}`]: { session: sessionToUse },
         [`buddyMatches.${buddy.id}`]: { session: sessionToUse },
       });
 
-      // 2) For BUDDY:
-      //    - add/update buddyMatches.<myUid> with the same matched session
-      //      (so they also see me in their "My buddies" page)
       const buddyUpdate = updateDoc(buddyRef, {
         [`buddyMatches.${currentUser.uid}`]: { session: sessionToUse },
       });
 
       await Promise.all([meUpdate, buddyUpdate]);
 
-      // 3) Update local UI state
       setIncomingRequests((prev) => prev.filter((b) => b.id !== buddy.id));
-      setMatches((prev) => [
-        { ...buddy, outgoingSession: sessionToUse },
-        ...prev,
-      ]);
+      setMatches((prev) => [{ ...buddy, outgoingSession: sessionToUse }, ...prev]);
+      setOpenMenuBuddyId(null);
     } catch (err) {
       console.error("Error accepting request:", err);
       alert("Failed to accept request.");
     }
   }
 
-
-  // ✅ Decline: remove incomingRequests.<buddyId> from me,
-  // and remove outgoingRequests.<myUid> from the buddy (so it disappears for them too).
   async function handleDeclineRequest(buddy) {
     if (!currentUser) return;
 
@@ -234,14 +205,13 @@ export default function MyBuddies() {
       });
 
       setIncomingRequests((prev) => prev.filter((b) => b.id !== buddy.id));
+      setOpenMenuBuddyId(null);
     } catch (err) {
       console.error("Error declining request:", err);
       alert("Failed to decline request.");
     }
   }
 
-  // ✅ Cancel: remove outgoingRequests.<buddyId> from me,
-  // and remove incomingRequests.<myUid> from buddy.
   async function handleCancelRequest(buddy) {
     if (!currentUser) return;
 
@@ -258,18 +228,55 @@ export default function MyBuddies() {
       });
 
       setOutgoingRequests((prev) => prev.filter((b) => b.id !== buddy.id));
+      setOpenMenuBuddyId(null);
     } catch (err) {
       console.error("Error cancelling request:", err);
       alert("Failed to cancel request.");
     }
   }
 
-  // ---------- UI components ----------
-  function BuddyCard({ buddy, label, topRight, bottomRight, rightAlign = "center" }) {
-    const initials = getInitials(buddy.name || buddy.email);
+  async function handleBlockUser(buddy) {
+    if (!currentUser) return;
 
-    const rightAlignClass =
-      rightAlign === "bottom" ? "justify-end" : "justify-center";
+    const ok = window.confirm(`Block ${buddy.name}?`);
+    if (!ok) return;
+
+    try {
+      const meRef = doc(db, "users", currentUser.uid);
+      const buddyRef = doc(db, "users", buddy.id);
+
+      await updateDoc(meRef, {
+        blockedBuddies: arrayUnion(buddy.id),
+        [`incomingRequests.${buddy.id}`]: deleteField(),
+        [`outgoingRequests.${buddy.id}`]: deleteField(),
+        [`buddyMatches.${buddy.id}`]: deleteField(),
+      });
+
+      await updateDoc(buddyRef, {
+        blockedBuddies: arrayUnion(currentUser.uid),
+        [`incomingRequests.${currentUser.uid}`]: deleteField(),
+        [`outgoingRequests.${currentUser.uid}`]: deleteField(),
+        [`buddyMatches.${currentUser.uid}`]: deleteField(),
+      });
+
+      setMatches((prev) => prev.filter((b) => b.id !== buddy.id));
+      setIncomingRequests((prev) => prev.filter((b) => b.id !== buddy.id));
+      setOutgoingRequests((prev) => prev.filter((b) => b.id !== buddy.id));
+      setOpenMenuBuddyId(null);
+    } catch (err) {
+      console.error("Error blocking user:", err);
+      alert("Failed to block user.");
+    }
+  }
+
+  function handleStartChat(buddy) {
+    alert(`Start chat with ${buddy.name}`);
+  }
+
+  // ---------- UI components ----------
+
+  function BuddyCard({ buddy, label, topRight, bottomRight }) {
+    const initials = getInitials(buddy.name || buddy.email);
 
     return (
       <article className="bg-white rounded-2xl shadow-sm border border-slate-100 px-6 py-4 flex gap-5">
@@ -292,24 +299,13 @@ export default function MyBuddies() {
               <p className="text-xs text-slate-500 truncate">{buddy.email}</p>
             )}
 
-            {buddy.preferences?.length > 0 && (
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {buddy.preferences.map((pref) => (
-                  <span
-                    key={pref}
-                    className="px-2 py-0.5 rounded-full bg-slate-100 text-[11px] text-slate-700"
-                  >
-                    {pref}
-                  </span>
-                ))}
-              </div>
+            {label && (
+              <p className="mt-2 text-[11px] text-slate-500">{label}</p>
             )}
-
-            {label && <p className="mt-2 text-[11px] text-slate-500">{label}</p>}
           </div>
 
-          {/* Right column: top-right menu + bottom-right button */}
-          <div className={`flex flex-col ${rightAlignClass} items-end ml-4`}>
+          {/* Right column: menu at top-right + button at bottom-right */}
+          <div className="flex flex-col items-end ml-4 min-w-[96px]">
             <div className="w-full flex justify-end">{topRight}</div>
             <div className="mt-auto">{bottomRight}</div>
           </div>
@@ -318,9 +314,43 @@ export default function MyBuddies() {
     );
   }
 
+  function ThreeDotMenu({ buddy, items = [] }) {
+    return (
+      <div className="relative">
+        <button
+          type="button"
+          className="p-2 rounded-full hover:bg-slate-100 text-slate-500"
+          onClick={() =>
+            setOpenMenuBuddyId((prev) => (prev === buddy.id ? null : buddy.id))
+          }
+          aria-label="Open menu"
+          title="More"
+        >
+          •••
+        </button>
 
+        {openMenuBuddyId === buddy.id && (
+          <div className="absolute right-0 mt-2 w-44 bg-white border border-slate-200 rounded-md shadow-lg text-xs z-10 overflow-hidden">
+            {items.map((it) => (
+              <button
+                key={it.label}
+                type="button"
+                onClick={it.onClick}
+                className={`w-full text-left px-3 py-2 hover:bg-slate-50 ${
+                  it.danger ? "text-red-600" : "text-slate-700"
+                }`}
+              >
+                {it.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   // ---------- Rendering ----------
+
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 pt-20 pb-10">
@@ -378,34 +408,16 @@ export default function MyBuddies() {
                   buddy={buddy}
                   label="You both reached out. Ready to train together!"
                   topRight={
-                    <div className="relative">
-                      <button
-                        type="button"
-                        className="p-2 rounded-full hover:bg-slate-100 text-slate-500"
-                        onClick={() =>
-                          setOpenMenuBuddyId((prev) => (prev === buddy.id ? null : buddy.id))
-                        }
-                        aria-label="Open menu"
-                        title="More"
-                      >
-                        •••
-                      </button>
-
-                      {openMenuBuddyId === buddy.id && (
-                        <div className="absolute right-0 mt-2 w-40 bg-white border border-slate-200 rounded-md shadow-lg text-xs z-10">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setOpenMenuBuddyId(null);
-                              handleRemoveMatch(buddy);
-                            }}
-                            className="w-full text-left px-3 py-2 hover:bg-slate-50 text-red-600"
-                          >
-                            Remove match
-                          </button>
-                        </div>
-                      )}
-                    </div>
+                    <ThreeDotMenu
+                      buddy={buddy}
+                      items={[
+                        {
+                          label: "Remove match",
+                          danger: true,
+                          onClick: () => handleRemoveMatch(buddy),
+                        },
+                      ]}
+                    />
                   }
                   bottomRight={
                     <button
@@ -418,7 +430,6 @@ export default function MyBuddies() {
                   }
                 />
               ))}
-
             </div>
           </section>
         )}
@@ -437,7 +448,19 @@ export default function MyBuddies() {
                   label={`Requested: (${formatShortDate(
                     buddy.incomingSession?.date
                   )}) ${buddy.incomingSession?.label ?? "session"}`}
-                  rightAction={
+                  topRight={
+                    <ThreeDotMenu
+                      buddy={buddy}
+                      items={[
+                        {
+                          label: "Block user",
+                          danger: true,
+                          onClick: () => handleBlockUser(buddy),
+                        },
+                      ]}
+                    />
+                  }
+                  bottomRight={
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
@@ -479,16 +502,32 @@ export default function MyBuddies() {
                   label={`Requested: (${formatShortDate(
                     buddy.outgoingSession?.date
                   )}) ${buddy.outgoingSession?.label ?? "session"}`}
-                  rightAlign="bottom"
-                  rightAction={
-                    <button
-                      type="button"
-                      onClick={() => handleCancelRequest(buddy)}
-                      className="px-4 py-1.5 rounded-full text-xs font-semibold bg-red-50 text-red-600 border border-red-200 hover:bg-red-100"
-                    >
-                      Cancel
-                    </button>
+                  topRight={
+                    <ThreeDotMenu
+                      buddy={buddy}
+                      items={[
+                        {
+                          label: "Cancel request",
+                          danger: true,
+                          onClick: () => handleCancelRequest(buddy),
+                        },
+                        {
+                          label: "Block user",
+                          danger: true,
+                          onClick: () => handleBlockUser(buddy),
+                        },
+                      ]}
+                    />
                   }
+                  // bottomRight={
+                  //   <button
+                  //     type="button"
+                  //     onClick={() => handleCancelRequest(buddy)}
+                  //     className="px-4 py-1.5 rounded-full text-xs font-semibold bg-red-50 text-red-600 border border-red-200 hover:bg-red-100"
+                  //   >
+                  //     Cancel
+                  //   </button>
+                  // }
                 />
               ))}
             </div>
