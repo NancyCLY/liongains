@@ -1,6 +1,4 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { Cog6ToothIcon } from "@heroicons/react/24/outline";
-import { useNavigate } from "react-router-dom";
 import { db } from "../services/firebase";
 import {
   collection,
@@ -11,66 +9,61 @@ import {
   getDocs,
 } from "firebase/firestore";
 
+import lionIcon from "../assets/lion-blue.png";
+
 /* --------------------------------------------------------------------------
-   VIDEO POST COMPONENT — Styled according to liongainshome.css structure
+   VIDEO POST COMPONENT
    -------------------------------------------------------------------------- */
 function VideoPost({ video }) {
   const { title, youtubeId, tags = [], posterName, createdAt } = video;
-
   const timeAgo = createdAt?.toDate?.().toLocaleString() || "Recent";
 
   return (
     <article className="w-[568px] mx-auto bg-white border rounded-lg overflow-hidden shadow">
-      {/* tweet-head */}
-      <div className="tweet-head flex items-center justify-between px-4 py-3 bg-gray-50 border-b">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-gray-300" />
-          <span className="font-semibold text-gray-800">
-            @{posterName || "user"}
-          </span>
-        </div>
-        <span className="text-xs text-gray-500">{timeAgo}</span>
+      {/* Header (NO timestamp here anymore) */}
+      <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 border-b">
+        <div className="h-10 w-10 rounded-full bg-gray-300" />
+        <span className="font-semibold text-gray-800">
+          @{posterName || "Unknown"}
+        </span>
       </div>
 
-      {/* tweet-body */}
-      <div className="tweet-body px-4 py-3">
-        <p className="text-gray-800 text-base font-medium">{title}</p>
+      {/* Title */}
+      <div className="px-4 py-3">
+        <p className="text-gray-900 text-base font-medium">{title}</p>
       </div>
 
-      {/* tweet-image-container */}
-      <div className="tweet-image-container bg-black">
+      {/* Video */}
+      <div className="bg-black">
         <iframe
           className="w-full aspect-video"
           src={`https://www.youtube.com/embed/${youtubeId}`}
           title={title}
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
         />
       </div>
 
-      {/* tweet-timestamp */}
-      <div className="tweet-timestamp px-4 py-2 text-sm text-gray-500 border-t">
-        Posted at: {timeAgo}
-      </div>
-
-      {/* tweet-discussion */}
-      <div className="tweet-discussion px-4 py-2 flex flex-wrap gap-2 border-t bg-gray-50">
-        {tags.map((tag, index) => (
-          <span
-            key={index}
-            className="px-3 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-700"
-          >
-            {tag}
-          </span>
-        ))}
-      </div>
-
-      {/* tweet-sharing */}
-      <div className="tweet-sharing flex items-center justify-end px-4 py-3 border-t bg-white">
-        <button className="text-gray-500 hover:text-red-500 text-xl transition">
+      {/* Footer row */}
+      <div className="flex items-center justify-between px-4 py-3 border-t text-sm text-gray-500">
+        <span>Posted at: {timeAgo}</span>
+        <button className="text-red-500 text-xl hover:scale-110 transition">
           ❤️
         </button>
       </div>
+
+      {/* Tags */}
+      {tags.length > 0 && (
+        <div className="px-4 pb-3 flex flex-wrap gap-2">
+          {tags.map((tag, index) => (
+            <span
+              key={index}
+              className="px-3 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-700"
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
+      )}
     </article>
   );
 }
@@ -79,7 +72,6 @@ function VideoPost({ video }) {
    MAIN HOME PAGE
    -------------------------------------------------------------------------- */
 export default function Home() {
-  const navigate = useNavigate();
   const [videos, setVideos] = useState([]);
   const [lastDoc, setLastDoc] = useState(null);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -101,10 +93,9 @@ export default function Home() {
     loadInitial();
   }, []);
 
-  /* LOAD MORE VIDEOS */
+  /* LOAD MORE */
   const loadMore = useCallback(async () => {
-    if (!lastDoc) return;
-
+    if (!lastDoc || loadingMore) return;
     setLoadingMore(true);
 
     const q = query(
@@ -122,28 +113,41 @@ export default function Home() {
 
     setLastDoc(snapshot.docs[snapshot.docs.length - 1] || null);
     setLoadingMore(false);
-  }, [lastDoc]);
+  }, [lastDoc, loadingMore]);
 
-  /* SCROLL HANDLER */
+  /* Infinite scroll */
   useEffect(() => {
     const handleScroll = () => {
-      const offset = window.innerHeight + window.scrollY;
-      const bottom = document.documentElement.offsetHeight - 200;
-
-      if (offset >= bottom && !loadingMore) {
+      if (
+        window.innerHeight + window.scrollY >=
+        document.documentElement.offsetHeight - 200
+      ) {
         loadMore();
       }
     };
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [loadMore, loadingMore]);
+  }, [loadMore]);
 
   /* RENDER */
   return (
-    <div className="pt-16 pb-32">
-      {/* FEED */}
-      <div className="mt-6 space-y-6">
+    <div className="pt-12 pb-32">
+      {/* Header row: Lion icon + title */}
+      <div className="relative max-w-[568px] mx-auto px-4 mt-4 mb-8 flex items-center justify-center">
+        {/* Lion icon (top-left) */}
+        <img
+          src={lionIcon}
+          alt="LionGains"
+          className="absolute left-4 w-8 h-8"
+        />
+
+        {/* My Feed title */}
+        <h1 className="text-3xl font-bold text-blue-500">My Feed</h1>
+      </div>
+
+      {/* Feed */}
+      <div className="space-y-8">
         {videos.length === 0 && (
           <p className="text-center text-gray-500">No videos yet…</p>
         )}
