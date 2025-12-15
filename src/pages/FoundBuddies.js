@@ -1,3 +1,5 @@
+// src/pages/FoundBuddies.js
+
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import {
@@ -9,13 +11,13 @@ import {
   arrayUnion,
 } from "firebase/firestore";
 import { db } from "../services/firebase";
-import { EllipsisHorizontalIcon } from "@heroicons/react/24/outline";
 
 const DAY_LABELS = ["Su", "M", "Tu", "W", "Th", "F", "Sa"];
-const MAX_BUDDIES_TOTAL = 5;
+const MAX_BUDDIES_TOTAL = 5; // total buddies a user can reach out to
 
-/* ================= HELPERS ================= */
+// ---------- Helpers ----------
 
+// currentAvailability & buddyAvailability are maps: { [isoDate]: number[] }
 function computeAllOverlappingSessions(
   currentAvailability = {},
   buddyAvailability = {}
@@ -38,6 +40,7 @@ function computeAllOverlappingSessions(
     }
   }
 
+  // sort by date then hour
   overlaps.sort((a, b) => {
     if (a.date === b.date) return a.hour - b.hour;
     return a.date < b.date ? -1 : 1;
@@ -49,95 +52,127 @@ function computeAllOverlappingSessions(
 function formatSessionLabel(dateStr, hour24) {
   const d = new Date(`${dateStr}T00:00:00`);
   const dow = DAY_LABELS[d.getDay()];
-  const start = formatHour12(hour24);
-  const end = formatHour12(Math.min(hour24 + 2, 24));
-  return `${dow} ${start}-${end}`;
+
+  const startHour = hour24;
+  const endHour = Math.min(hour24 + 2, 24); // simple 2-hour block like "8-10"
+
+  const startLabel = formatHour12(startHour);
+  const endLabel = formatHour12(endHour);
+
+  // Example: "M 8-10"
+  return `${dow} ${startLabel}-${endLabel}`;
 }
 
-function formatHour12(h) {
-  const v = h % 12 || 12;
-  return `${v}`;
+function formatHour12(hour24) {
+  const h = (hour24 % 12) || 12;
+  return `${h}`;
 }
 
-function getInitials(name = "") {
-  return name
-    .split(" ")
-    .map((w) => w[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-}
-
-/* ================= PAGE ================= */
+// ---------- Component ----------
 
 export default function FoundBuddies() {
   const { currentUser } = useAuth();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [buddies, setBuddies] = useState([]);
 
-  const [selectedSessionByBuddy, setSelectedSessionByBuddy] = useState({});
+  const [buddies, setBuddies] = useState([]); // [{ id, name, preferences, overlappingSessions, overlapCount }]
+  const [showAllSessions, setShowAllSessions] = useState({}); // buddyId -> bool
+  const [selectedSessionByBuddy, setSelectedSessionByBuddy] = useState({}); // buddyId -> sessionId
+
+  // now represents buddyIds you've already requested (from map keys)
   const [existingReachedOutIds, setExistingReachedOutIds] = useState(new Set());
-  const [newReachedOutIds, setNewReachedOutIds] = useState(new Set());
+  const [newReachedOutIds, setNewReachedOutIds] = useState(new Set()); // from this screen
+
   const [openMenuBuddyId, setOpenMenuBuddyId] = useState(null);
 
   useEffect(() => {
     if (!currentUser) {
-      setError("You must be logged in.");
+      setError("You must be logged in to see matches.");
       setLoading(false);
       return;
     }
 
     async function loadMatches() {
       try {
+        setLoading(true);
+        setError("");
+
         const userRef = doc(db, "users", currentUser.uid);
         const userSnap = await getDoc(userRef);
-        if (!userSnap.exists()) return;
 
-        const data = userSnap.data();
-        const currentAvailability = data.availability || {};
-        const outgoingMap = data.outgoingRequests || {};
-        const incomingMap = data.incomingRequests || {};
-        const matchesMap = data.buddyMatches || {};
-        const blocked = new Set(data.blockedBuddies || []);
+        if (!userSnap.exists()) {
+          setError("Your user profile could not be found.");
+          setLoading(false);
+          return;
+        }
 
-        setExistingReachedOutIds(new Set(Object.keys(outgoingMap)));
+        const userData = userSnap.data();
+        const currentAvailability = userData.availability || {};
 
-        const exclude = new Set([
+        // ✅ outgoing/incoming are MAPS now
+        const outgoingMap = userData.outgoingRequests || {}; // { [buddyId]: {session...} }
+        const incomingMap = userData.incomingRequests || {}; // { [buddyId]: {session...} }  (keyed by buddyId on *your* doc)
+        const matchesMap = userData.buddyMatches || {}; // { [buddyId]: {...} }
+
+        const reachedOutSet = new Set(Object.keys(outgoingMap));
+        setExistingReachedOutIds(reachedOutSet);
+
+        const blockedList = userData.blockedBuddies || [];
+        const blockedSet = new Set(blockedList);
+
+        // ✅ Build ONE exclude set:
+        // - blocked
+        // - already requested (either direction)
+        // - already matched
+        const excludeSet = new Set([
+          ...blockedList,
           ...Object.keys(outgoingMap),
           ...Object.keys(incomingMap),
           ...Object.keys(matchesMap),
-          ...blocked,
         ]);
 
-        const snap = await getDocs(collection(db, "users"));
-        const found = [];
+        // Fetch all users
+        const usersSnap = await getDocs(collection(db, "users"));
+        const allMatches = [];
 
-        snap.forEach((docu) => {
-          if (docu.id === currentUser.uid) return;
-          if (exclude.has(docu.id)) return;
+        usersSnap.forEach((buddyDoc) => {
+          const buddyId = buddyDoc.id;
 
-          const d = docu.data();
-          if ((d.blockedBuddies || []).includes(currentUser.uid)) return;
+          if (buddyId === currentUser.uid) return; // skip self
+          if (excludeSet.has(buddyId)) return; // ✅ skip blocked/requested/matched
 
+          const data = buddyDoc.data();
+
+          // ✅ ALSO skip if THEY blocked ME
+          const theyBlockedMe =
+            (data.blockedBuddies || []).includes(currentUser.uid);
+          if (theyBlockedMe) return;
+
+          const buddyAvailability = data.availability || {};
           const overlaps = computeAllOverlappingSessions(
             currentAvailability,
-            d.availability || {}
+            buddyAvailability
           );
 
           if (overlaps.length === 0) return;
 
-          found.push({
-            id: docu.id,
-            name: d.username || d.email || "Gym Buddy",
+          allMatches.push({
+            id: buddyId,
+            name: data.username || data.email || "Gym Buddy",
+            preferences: data.preferences || [],
             overlappingSessions: overlaps,
+            overlapCount: overlaps.length,
           });
         });
 
-        setBuddies(found.slice(0, 5));
-      } catch (e) {
-        console.error(e);
+        // Sort buddies by number of overlapping sessions (most → least)
+        allMatches.sort((a, b) => b.overlapCount - a.overlapCount);
+
+        // Show only top 5
+        setBuddies(allMatches.slice(0, 5));
+      } catch (err) {
+        console.error("Error loading matches:", err);
         setError("Failed to load buddies.");
       } finally {
         setLoading(false);
@@ -147,163 +182,310 @@ export default function FoundBuddies() {
     loadMatches();
   }, [currentUser]);
 
-  const totalReached = existingReachedOutIds.size + newReachedOutIds.size;
+  const totalReachedOut = existingReachedOutIds.size + newReachedOutIds.size;
+
+  function toggleShowAllSessions(buddyId) {
+    setShowAllSessions((prev) => ({
+      ...prev,
+      [buddyId]: !prev[buddyId],
+    }));
+  }
+
+  function handleSelectSession(buddyId, sessionId) {
+    setSelectedSessionByBuddy((prev) => ({
+      ...prev,
+      [buddyId]: prev[buddyId] === sessionId ? null : sessionId, // toggle
+    }));
+  }
 
   async function handleReachOut(buddy) {
-    const sessionId = selectedSessionByBuddy[buddy.id];
+    if (!currentUser) return;
+
+    const buddyId = buddy.id;
+    const sessionId = selectedSessionByBuddy[buddyId];
     if (!sessionId) return;
 
-    const session = buddy.overlappingSessions.find((s) => s.id === sessionId);
-    if (!session) return;
+    const alreadyReached =
+      existingReachedOutIds.has(buddyId) || newReachedOutIds.has(buddyId);
+
+    if (!alreadyReached && totalReachedOut >= MAX_BUDDIES_TOTAL) return;
+
+    const chosenSession = buddy.overlappingSessions.find(
+      (s) => s.id === sessionId
+    );
+    if (!chosenSession) return;
+
+    const payload = {
+      session: {
+        id: chosenSession.id,
+        date: chosenSession.date,
+        hour: chosenSession.hour,
+        label: chosenSession.label,
+      },
+    };
 
     try {
-      await updateDoc(doc(db, "users", currentUser.uid), {
-        [`outgoingRequests.${buddy.id}`]: { session },
-      });
-      await updateDoc(doc(db, "users", buddy.id), {
-        [`incomingRequests.${currentUser.uid}`]: { session },
+      const userRef = doc(db, "users", currentUser.uid);
+      const buddyRef = doc(db, "users", buddyId);
+
+      await updateDoc(userRef, {
+        [`outgoingRequests.${buddyId}`]: payload,
       });
 
-      setNewReachedOutIds((p) => new Set(p).add(buddy.id));
-    } catch (e) {
-      alert("Failed to reach out.");
+      await updateDoc(buddyRef, {
+        [`incomingRequests.${currentUser.uid}`]: payload,
+      });
+
+      setNewReachedOutIds((prev) => {
+        const next = new Set(prev);
+        next.add(buddyId);
+        return next;
+      });
+
+      alert(
+        `You reached out to ${buddy.name} for session: ${chosenSession.label}`
+      );
+
+      // Optional: immediately remove from the list after reaching out
+      // setBuddies((prev) => prev.filter((b) => b.id !== buddyId));
+    } catch (err) {
+      console.error("Error reaching out:", err);
+      alert("There was an error sending your request.");
     }
   }
 
   async function handleBlock(buddyId) {
+    if (!currentUser) {
+      setBuddies((prev) => prev.filter((b) => b.id !== buddyId));
+      return;
+    }
+
     try {
-      await updateDoc(doc(db, "users", currentUser.uid), {
+      const userRef = doc(db, "users", currentUser.uid);
+      await updateDoc(userRef, {
         blockedBuddies: arrayUnion(buddyId),
       });
-    } catch {}
+    } catch (err) {
+      console.warn("Failed to persist block, but removing locally:", err);
+    }
+
     setBuddies((prev) => prev.filter((b) => b.id !== buddyId));
+    setSelectedSessionByBuddy((prev) => {
+      const next = { ...prev };
+      delete next[buddyId];
+      return next;
+    });
+    setNewReachedOutIds((prev) => {
+      const next = new Set(prev);
+      next.delete(buddyId);
+      return next;
+    });
     setOpenMenuBuddyId(null);
   }
 
+  // ---------- Render ----------
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F5F6F8] pt-20 pb-32 text-center text-sm text-gray-500">
-        Loading buddies…
+      <div className="min-h-screen bg-slate-50 pt-20 pb-10">
+        <div className="max-w-lg mx-auto px-4">
+          <p className="text-sm text-slate-500 text-center">
+            Loading your buddies…
+          </p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-[#F5F6F8] pt-20 pb-32 text-center text-sm text-red-500">
-        {error}
+      <div className="min-h-screen bg-slate-50 pt-20 pb-10">
+        <div className="max-w-lg mx-auto px-4">
+          <p className="text-sm text-red-500 text-center">{error}</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F5F6F8] pt-6 pb-32">
-      <div className="max-w-md mx-auto px-4 space-y-6">
-        {/* HEADER */}
-        <header className="text-center space-y-1">
-          <h1 className="text-2xl font-semibold text-gray-900">
-            Found Buddies
-          </h1>
-          <p className="text-sm text-gray-500">
-            Based on your latest availability.
-          </p>
-        </header>
+    <div className="min-h-screen bg-slate-50 pt-20 pb-10">
+      <div className="max-w-lg mx-auto px-4">
+        {/* Header */}
+        <h1 className="text-3xl font-semibold text-center text-slate-900">
+          Found buddies
+        </h1>
+        <p className="text-slate-500 text-sm text-center mt-1">
+          Based on your latest availability.
+        </p>
 
-        {/* LIST */}
-        <div className="space-y-4">
+        {/* Buddy list */}
+        <div className="mt-6 space-y-4">
           {buddies.map((buddy) => {
-            const selected = selectedSessionByBuddy[buddy.id];
+            const showAll = !!showAllSessions[buddy.id];
+            const sessionsToShow = showAll
+              ? buddy.overlappingSessions
+              : buddy.overlappingSessions.slice(0, 2);
+            const remainingCount =
+              buddy.overlappingSessions.length - sessionsToShow.length;
+
+            const selectedSessionId = selectedSessionByBuddy[buddy.id] || null;
+            const hasSelectedSession = !!selectedSessionId;
+
             const alreadyReached =
               existingReachedOutIds.has(buddy.id) ||
               newReachedOutIds.has(buddy.id);
 
+            const disableReachOut =
+              !hasSelectedSession ||
+              (!alreadyReached && totalReachedOut >= MAX_BUDDIES_TOTAL);
+
+            let helperText = "";
+            if (totalReachedOut >= MAX_BUDDIES_TOTAL && !alreadyReached) {
+              helperText = `Limit of ${MAX_BUDDIES_TOTAL} buddies reached.`;
+            }
+
             return (
-              <div
+              <article
                 key={buddy.id}
-                className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex gap-4"
+                className="bg-white rounded-full shadow-sm border border-slate-100 px-6 py-5 flex gap-8"
               >
                 {/* Avatar */}
-                <div className="w-12 h-12 rounded-full bg-blue-500 text-white flex items-center justify-center font-semibold">
-                  {getInitials(buddy.name)}
+                <div className="flex-shrink-0 flex items-center justify-center">
+                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white font-semibold text-lg shadow-sm">
+                    {buddy.name
+                      .split(" ")
+                      .map((w) => w[0])
+                      .join("")
+                      .slice(0, 2)
+                      .toUpperCase()}
+                  </div>
                 </div>
 
-                {/* Content */}
-                <div className="flex-1">
-                  <div className="flex justify-between items-start">
-                    <p className="font-semibold text-sm text-gray-900">
+                <div className="flex-1 flex items-stretch">
+                  <div className="flex flex-col justify-center flex-1 max-w-[240px]">
+                    <h2 className="text-sm font-semibold text-slate-900 mb-1 truncate">
                       {buddy.name}
+                    </h2>
+
+                    {buddy.preferences?.length > 0 && (
+                      <div className="mt-1 mb-2 flex flex-wrap gap-1.5">
+                        {buddy.preferences.map((pref) => (
+                          <span
+                            key={pref}
+                            className="px-2 py-0.5 rounded-full bg-slate-100 text-[11px] text-slate-700"
+                          >
+                            {pref}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    <p className="text-[11px] font-medium text-slate-600 mb-1">
+                      Select a session:
                     </p>
-                    <button
-                      onClick={() =>
-                        setOpenMenuBuddyId(
-                          openMenuBuddyId === buddy.id ? null : buddy.id
-                        )
-                      }
-                    >
-                      <EllipsisHorizontalIcon className="w-5 h-5 text-gray-400" />
-                    </button>
+
+                    <div className="flex flex-wrap gap-1.5 items-center">
+                      {sessionsToShow.map((session) => {
+                        const isSelected = selectedSessionId === session.id;
+                        return (
+                          <button
+                            key={session.id}
+                            type="button"
+                            onClick={() =>
+                              handleSelectSession(buddy.id, session.id)
+                            }
+                            className={`px-2.5 py-1 rounded-full border text-[11px] font-medium transition ${
+                              isSelected
+                                ? "bg-blue-600 border-blue-600 text-white shadow-sm"
+                                : "bg-blue-50/60 border-blue-100 text-blue-700 hover:bg-blue-100"
+                            }`}
+                          >
+                            {session.label}
+                          </button>
+                        );
+                      })}
+
+                      {remainingCount > 0 && !showAll && (
+                        <button
+                          type="button"
+                          onClick={() => toggleShowAllSessions(buddy.id)}
+                          className="text-[11px] text-blue-600 underline ml-1"
+                        >
+                          +{remainingCount} more
+                        </button>
+                      )}
+                      {showAll && buddy.overlappingSessions.length > 2 && (
+                        <button
+                          type="button"
+                          onClick={() => toggleShowAllSessions(buddy.id)}
+                          className="text-[11px] text-blue-600 underline ml-1"
+                        >
+                          show less
+                        </button>
+                      )}
+                    </div>
+
+                    {helperText && (
+                      <p className="mt-2 text-[11px] text-slate-500">
+                        {helperText}
+                      </p>
+                    )}
                   </div>
 
-                  <p className="text-xs text-gray-500 mt-1">
-                    Select a session:
-                  </p>
-
-                  <div className="flex gap-2 mt-2 flex-wrap">
-                    {buddy.overlappingSessions.slice(0, 2).map((s) => (
+                  <div className="flex flex-col justify-between items-end ml-4 mr-6">
+                    {/* Menu */}
+                    <div className="relative">
                       <button
-                        key={s.id}
+                        type="button"
+                        className="p-2 rounded-full hover:bg-slate-100 text-slate-500"
                         onClick={() =>
-                          setSelectedSessionByBuddy((p) => ({
-                            ...p,
-                            [buddy.id]: s.id,
-                          }))
+                          setOpenMenuBuddyId((prev) =>
+                            prev === buddy.id ? null : buddy.id
+                          )
                         }
-                        className={`px-3 py-1 rounded-full text-xs border ${
-                          selected === s.id
-                            ? "bg-blue-600 text-white border-blue-600"
-                            : "bg-blue-50 text-blue-600 border-blue-100"
-                        }`}
                       >
-                        {s.label}
+                        •••
                       </button>
-                    ))}
-                  </div>
+                      {openMenuBuddyId === buddy.id && (
+                        <div className="absolute right-0 mt-2 w-32 bg-white border border-slate-200 rounded-md shadow-lg text-xs z-10">
+                          <button
+                            type="button"
+                            onClick={() => handleBlock(buddy.id)}
+                            className="w-full text-left px-3 py-2 hover:bg-slate-50 text-red-600"
+                          >
+                            Block user
+                          </button>
+                        </div>
+                      )}
+                    </div>
 
-                  <div className="mt-3">
+                    {/* Reach out button */}
                     <button
-                      disabled={!selected || alreadyReached}
+                      type="button"
                       onClick={() => handleReachOut(buddy)}
-                      className={`px-4 py-1.5 rounded-full text-xs font-semibold ${
+                      disabled={disableReachOut}
+                      className={`px-4 py-1.5 rounded-full text-xs font-semibold transition shadow-sm ${
                         alreadyReached
-                          ? "bg-emerald-100 text-emerald-700"
-                          : selected
-                          ? "bg-blue-600 text-white"
-                          : "bg-gray-200 text-gray-500"
+                          ? "bg-emerald-50 text-emerald-700 border border-emerald-200 cursor-default"
+                          : disableReachOut
+                          ? "bg-slate-200 text-slate-500 cursor-not-allowed"
+                          : "bg-blue-600 text-white hover:bg-blue-700"
                       }`}
                     >
                       {alreadyReached ? "Reached out" : "Reach out"}
                     </button>
                   </div>
                 </div>
-
-                {/* Menu */}
-                {openMenuBuddyId === buddy.id && (
-                  <div className="absolute right-6 mt-10 bg-white border rounded shadow text-xs">
-                    <button
-                      onClick={() => handleBlock(buddy.id)}
-                      className="px-3 py-2 text-red-600 hover:bg-gray-50"
-                    >
-                      Block user
-                    </button>
-                  </div>
-                )}
-              </div>
+              </article>
             );
           })}
         </div>
 
         {buddies.length === 0 && (
-          <p className="text-center text-sm text-gray-500">No buddies found.</p>
+          <p className="mt-6 text-sm text-center text-slate-500">
+            No buddies found with overlapping availability. Try adjusting your
+            schedule.
+          </p>
         )}
       </div>
     </div>
