@@ -7,7 +7,6 @@ import GymBuddy from "./pages/GymBuddy";
 import Upload from "./pages/Upload";
 import Login from "./pages/Login";
 import FoundBuddies from "./pages/FoundBuddies";
-import MyBuddies from "./pages/MyBuddies";
 import Chats from "./pages/Chats"
 
 import Navbar from "./components/Navbar";
