@@ -26,7 +26,7 @@ export default function Navbar() {
       activeIcon: MagnifyingGlassSolid,
     },
     {
-      to: "/chats",
+      to: "/chat",
       label: "Chats",
       icon: ChatBubbleOvalLeftEllipsisIcon,
       activeIcon: ChatSolid,
