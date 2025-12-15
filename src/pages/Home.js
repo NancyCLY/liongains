@@ -1,16 +1,11 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
-import { db } from "../services/firebase";
-import {
-  collection,
-  query,
-  orderBy,
-  limit,
-  startAfter,
-  getDocs,
-} from "firebase/firestore";
-
 import { PlusIcon, HeartIcon } from "@heroicons/react/24/solid";
 import lionIcon from "../assets/lion-blue.png";
+
+import { fetchInitialVideos, fetchMoreVideos } from "../services/videoService";
+import { useAuth } from "../context/AuthContext";
+import { likeVideo, unlikeVideo, hasUserLiked } from "../services/videoService";
+
 
 /* -------------------------------------------------------------------------- */
 /*                              VIDEO CARD                                    */
@@ -137,18 +132,13 @@ export default function Home() {
 
   /* INITIAL FETCH */
   useEffect(() => {
-    const loadInitial = async () => {
-      const q = query(
-        collection(db, "videos"),
-        orderBy("createdAt", "desc"),
-        limit(5)
-      );
-      const snap = await getDocs(q);
-      setVideos(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
-      setLastDoc(snap.docs[snap.docs.length - 1] || null);
+    async function load() {
+      const { videos, lastDoc } = await fetchInitialVideos(5);
+      setVideos(videos);
+      setLastDoc(lastDoc);
       setInitialLoading(false);
-    };
-    loadInitial();
+    }
+    load();
   }, []);
 
   /* LOAD MORE */
@@ -156,19 +146,13 @@ export default function Home() {
     if (!lastDoc || loadingMore) return;
     setLoadingMore(true);
 
-    const q = query(
-      collection(db, "videos"),
-      orderBy("createdAt", "desc"),
-      startAfter(lastDoc),
-      limit(5)
+    const { videos: moreVideos, lastDoc: newLastDoc } = await fetchMoreVideos(
+      lastDoc,
+      5
     );
 
-    const snap = await getDocs(q);
-    setVideos((prev) => [
-      ...prev,
-      ...snap.docs.map((d) => ({ id: d.id, ...d.data() })),
-    ]);
-    setLastDoc(snap.docs[snap.docs.length - 1] || null);
+    setVideos((prev) => [...prev, ...moreVideos]);
+    setLastDoc(newLastDoc);
     setLoadingMore(false);
   }, [lastDoc, loadingMore]);
 
@@ -182,6 +166,7 @@ export default function Home() {
         loadMore();
       }
     };
+
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, [loadMore]);

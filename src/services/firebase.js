@@ -20,8 +20,6 @@ export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 
-// Optional: Analytics only works in browser (not server / debugging)
-// Wrap in try/catch for safety during dev
 let analytics;
 try {
   analytics = getAnalytics(app);

@@ -7,7 +7,7 @@ import { useAuth } from "../context/AuthContext";
   UPLOAD PAGE — YouTube-based version
 
   This page lets users register a YouTube link as a "video" in Firestore.
-  Actual video hosting is handled by YouTube (unlisted videos recommended).
+  Actual video hosting is handled by YouTube.
 */
 
 export default function Upload() {
