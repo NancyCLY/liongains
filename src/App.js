@@ -8,7 +8,6 @@ import Upload from "./pages/Upload";
 import Login from "./pages/Login";
 import FoundBuddies from "./pages/FoundBuddies";
 import MyBuddies from "./pages/MyBuddies";
-import Chats from "./pages/Chats"
 
 import Navbar from "./components/Navbar";
 
@@ -28,29 +27,14 @@ function App() {
             {/* Public routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/" element={<Home />} />
+            <Route path="/search" element={<Search />} />
 
             {/* Protected routes */}
-            <Route
-              path="/chats"
-              element={
-                <ProtectedRoute>
-                  <Chats />
-                </ProtectedRoute>
-              }
-            />
             <Route
               path="/gymbuddy"
               element={
                 <ProtectedRoute>
                   <GymBuddy />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/search"
-              element={
-                <ProtectedRoute>
-                  <Search />
                 </ProtectedRoute>
               }
             />

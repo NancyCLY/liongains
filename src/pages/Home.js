@@ -3,9 +3,6 @@ import { PlusIcon, HeartIcon } from "@heroicons/react/24/solid";
 import lionIcon from "../assets/lion-blue.png";
 
 import { fetchInitialVideos, fetchMoreVideos } from "../services/videoService";
-import { useAuth } from "../context/AuthContext";
-import { likeVideo, unlikeVideo, hasUserLiked } from "../services/videoService";
-
 
 /* -------------------------------------------------------------------------- */
 /*                              VIDEO CARD                                    */
