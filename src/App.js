@@ -63,14 +63,6 @@ function App() {
               }
             />
             <Route
-              path="/mybuddies"
-              element={
-                <ProtectedRoute>
-                  <MyBuddies />
-                </ProtectedRoute>
-              }
-            />
-            <Route
               path="/profile"
               element={
                 <ProtectedRoute>
