@@ -69,6 +69,19 @@ export default function Search() {
   -------------------------------------------------------------------------- */
   return (
     <div className="pt-16 pb-28 bg-white">
+
+      <header className="fixed top-0 left-0 w-full bg-white border-b z-40">
+        <div className="h-14 flex items-center justify-between px-4 max-w-md mx-auto">
+          <div>
+            <h1 className="text-lg font-semibold text-gray-900">Search</h1>
+          </div>
+          <div>
+            <p className="text-sm text-center text-gray-500 mt-1">
+              Search your machine
+            </p>
+          </div>
+        </div>
+      </header>
       <div className="max-w-md mx-auto px-5">
         {/* Title */}
         <h1 className="text-2xl font-semibold text-center text-gray-900">
