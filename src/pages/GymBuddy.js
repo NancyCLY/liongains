@@ -318,7 +318,7 @@ export default function GymBuddy() {
       </p>
 
       {/* Availability card */}
-      <section className="mt-4 bg-white rounded-xl shadow-sm border">
+      <section className="mt-4 bg-white rounded-xl shadow-sm border overflow-hidden">
         {/* <div className="px-3 py-2 border-b">
           <h2 className="font-semibold text-sm">Your Availability</h2>
         </div> */}
@@ -327,9 +327,10 @@ export default function GymBuddy() {
         <div className="overflow-x-auto">
           <div className="min-w-[350px]">
             {/* Header row: day-of-week + date */}
-            <div className="grid grid-cols-8 text-xs text-center font-medium bg-white border-b">
+            <div className="grid grid-cols-8 text-xs text-center font-medium bg-white border-b rounded-tl-full rounded-tr-full">
               <div className="py-2" />
               {DAYS.map((day) => (
+                
                 <div key={day.id} className="py-1 flex flex-col items-center justify-center">
                   <span className="font-semibold">{day.label}</span>
                   <span className="text-[10px] text-gray-500">
@@ -341,18 +342,18 @@ export default function GymBuddy() {
 
             {/* Scrollable body – THIS is what makes it shorter on mobile */}
             <div className="max-h-64 overflow-y-auto">
-              {TIMES.map((time) => (
+              {TIMES.map((time, timeIdx) => (
                 <div
                   key={time}
                   className="grid grid-cols-8 text-xs border-b last:border-b"
                 >
                   {/* Time label */}
-                  <div className="py-1.5 pl-2 pr-1 bg-white text-gray-700 border-r">
+                  <div className="py-1.5 pl-2 pr-1 bg-white text-gray-700 border-r rounded-bl-full">
                     {time}
                   </div>
 
                   {/* Slots */}
-                  {DAYS.map((day) => {
+                  {DAYS.map((day, dayIdx) => {
                     const dayId = day.id; // "YYYY-MM-DD"
                     const key = `${dayId}|${time}`;
                     const isSelected = selectedSlots.has(key);
@@ -362,11 +363,15 @@ export default function GymBuddy() {
                         key={key}
                         type="button"
                         onClick={() => toggleSlot(dayId, time)}
-                        className={`h-7 border-r text-transparent ${
-                          isSelected
-                            ? "bg-blue-500"
-                            : "bg-white hover:bg-blue-50"
-                        }`}
+                        className={`h-7 border-r text-transparent
+                          ${isSelected ? "bg-blue-500" : "bg-white"}
+                          ${
+                            timeIdx === TIMES.length - 1 &&
+                            dayIdx === DAYS.length - 1
+                              ? "rounded-br-xl"
+                              : ""
+                          }
+                        `}
                         aria-label={`${day.label} ${day.displayDate} ${time}`}
                       />
                     );
