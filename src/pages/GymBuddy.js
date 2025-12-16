@@ -11,11 +11,12 @@
   Navbar already implemented globally.
 */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from "../context/AuthContext";
 import { db, storage } from "../services/firebase";
 import { collection, getDocs,setDoc, getDoc, updateDoc, doc } from 'firebase/firestore';
 import { useNavigate } from "react-router-dom";
+import { getSuggestedQuery } from '@testing-library/dom';
 
 
 
@@ -78,11 +79,73 @@ function getNext7DaysFromTomorrow() {
 
 export default function GymBuddy() {
 
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
 
   const navigate = useNavigate();
   const { currentUser } = useAuth();
 
   const DAYS = getNext7DaysFromTomorrow();
+
+  const [suggestedBuddies, setSuggestedBuddies] = useState(new Set());
+
+  useEffect(() => {
+    if (!currentUser) {
+      setError("You must be logged in to see matches.");
+      setLoading(false);
+      return;
+    }
+
+    async function loadSuggestedBuddies() {
+
+      try {
+        setLoading(true);
+        setError("");
+
+        const usersSnap = await getDocs(collection(db, "users"));
+
+        const suggestedBuddies = [];
+        usersSnap.forEach((buddyDoc) => {
+          const buddyId = buddyDoc.id;          
+          const buddyData = buddyDoc.data();
+
+          if (buddyId !== currentUser.uid) {
+            suggestedBuddies.push({
+              id: buddyId,
+              name: buddyData.username || buddyData.email || "Gym Buddy",
+            });
+          }
+        });
+
+        setSuggestedBuddies(suggestedBuddies.slice(0, 5));
+
+
+      } catch (err) {
+        console.error("Error loading matches:", err);
+        setError("There was an error loading your matches.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadSuggestedBuddies();
+  }, [currentUser]);
+
+  const profileImages = require.context(
+    "../assets/profile",
+    false,
+    /\.(png|jpe?g|svg)$/
+  );
+
+  function getProfileImageSrc(userId) {
+    try {
+      return profileImages(`./${userId}.jpg`);
+    } catch {
+      return null;
+    }
+  }
+
 
   const TIMES = [
     "6AM",
@@ -363,32 +426,43 @@ export default function GymBuddy() {
       {/* Meet buddies preview */}
       <section className="mt-6">
         <div className="flex items-center justify-between mb-2">
-          <button
-            type="button"
-            className="text-sm font-semibold text-gray-800"
-          >
+          <button type="button" className="text-sm font-semibold text-gray-800">
             Meet buddies
           </button>
-          <button
-            type="button"
-            className="text-xs text-blue-600 hover:underline"
-          >
+          {/* <button type="button" className="text-xs text-blue-600 hover:underline">
             View all
-          </button>
+          </button> */}
         </div>
 
-        <div className="flex items-center gap-3">
-          {[1, 2, 3, 4].map((i) => (
-            <button
-              key={i}
-              type="button"
-              className="w-10 h-10 rounded-full bg-gray-200 border border-gray-300 flex items-center justify-center text-xs text-gray-600"
-            >
-              U{i}
-            </button>
-          ))}
-        </div>
+        {loading ? (
+          <p className="text-xs text-gray-500">Loading suggestions…</p>
+        ) : suggestedBuddies.length === 0 ? (
+          <p className="text-xs text-gray-500">
+            No suggestions yet — try selecting more availability.
+          </p>
+        ) : (
+          <div className="flex items-center gap-3">
+            {suggestedBuddies.map((b) => (
+              <button
+                type="button"
+                className="w-10 h-10 rounded-full bg-gray-200 border border-gray-300 flex items-center justify-center text-xs text-gray-700"
+                title={`${b.name}`}
+                aria-label={`Suggested buddy ${b.name}`}
+              >
+              <img
+                src={getProfileImageSrc(b.id)}
+                alt={b.name}
+                className="w-full h-full object-cover rounded-full"
+                onError={(e) => {
+                  e.currentTarget.style.display = "none";
+                }}
+              />
+              </button>
+            ))}
+          </div>
+        )}
       </section>
+
     </div>
   );
 }
