@@ -7,9 +7,24 @@ import { fetchInitialVideos, fetchMoreVideos } from "../services/videoService";
 /* -------------------------------------------------------------------------- */
 /*                              VIDEO CARD                                    */
 /* -------------------------------------------------------------------------- */
-function VideoPost({ video }) {
-  const { title, youtubeId, tags = [], posterName, createdAt } = video;
 
+const avatars = require.context(
+  "../assets/profile",
+  false,
+  /\.(png|jpe?g|webp)$/
+);
+
+function getAvatarSrc(posterId) {
+  try {
+    return avatars(`./${posterId}.jpg`);
+  } catch {
+    return null;
+  }
+}
+
+
+function VideoPost({ video }) {
+  const { title, youtubeId, tags = [], posterId, posterName, createdAt } = video;
   const [liked, setLiked] = useState(false);
   const [animateLike, setAnimateLike] = useState(false);
   const lastTap = useRef(0);
@@ -34,7 +49,12 @@ function VideoPost({ video }) {
     <article className="bg-white border-b">
       {/* USER ROW */}
       <div className="flex items-center gap-3 px-5 pt-4">
-        <div className="w-9 h-9 rounded-full bg-gray-300" />
+        {/* <div className="w-9 h-9 rounded-full bg-gray-300" /> */}
+        <img
+          src={getAvatarSrc(posterId) ?? "/default-avatar.png"}
+          alt="User avatar"
+          className="w-9 h-9 rounded-full object-cover"
+        />
         <span className="text-sm font-medium text-gray-800">
           @{posterName || "Unknown"}
         </span>
