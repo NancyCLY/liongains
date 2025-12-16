@@ -22,7 +22,7 @@ function App() {
         <Navbar />
 
         {/* Page content */}
-        <div className="pt-16 min-h-screen">
+        <div className="pt-8 min-h-screen">
           <Routes>
             {/* Public routes */}
             <Route path="/login" element={<Login />} />
