@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import { MagnifyingGlassIcon, MapIcon } from "@heroicons/react/24/outline";
 
 export default function Search() {
   /* --------------------------------------------------------------------------
@@ -68,13 +68,24 @@ export default function Search() {
      RENDER
   -------------------------------------------------------------------------- */
   return (
+    
     <div className="pb-28">
-      <div className="max-w-md mx-auto px-5">
-
-        {/* Title */}
-        <h1 className="text-2xl font-semibold text-center text-gray-900">
+      <div className="max-w-md mx-auto px-5 relative">
+        <div className="relative flex items-center justify-center">
+          <h1 className="text-2xl font-semibold text-center text-gray-900">
           Search
-        </h1>
+          </h1>
+
+          <button
+            type="button"
+            onClick={() => console.log("Open map")}
+            className="absolute right-0 flex h-10 w-10 items-center justify-center rounded-full hover:bg-gray-100 transition"
+            aria-label="Open map"
+            title="Map"
+          >
+            <MapIcon className="h-6 w-6 text-gray-700" />
+          </button>
+        </div>
         <p className="text-sm text-center text-gray-500 mt-1">
           Search your machine.
         </p>
@@ -91,10 +102,6 @@ export default function Search() {
               className="w-full h-11 pl-11 pr-4 rounded-full border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100"
             />
           </div>
-
-          <button className="h-11 px-5 rounded-full border border-gray-200 text-sm font-medium text-gray-700">
-            Map
-          </button>
         </div>
 
         {/* Sorting options */}
