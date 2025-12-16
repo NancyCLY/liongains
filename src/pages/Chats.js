@@ -382,18 +382,12 @@ export default function Chats() {
     outgoingRequests.length === 0;
 
   return (
-    <div className="min-h-screen bg-slate-50 pt-8 pb-10">
-      <header className="fixed top-0 left-0 w-full bg-white border-b z-40">
-        <div className="relative h-14 flex items-center px-4 max-w-md mx-auto">
-          <h1 className="absolute left-1/2 -translate-x-1/2 text-2xl font-semibold text-gray-900">
-            My Chats
-          </h1>
-        </div>
-      </header>
+    // <div className="min-h-screen bg-slate-50 pb-10">
       <div className="max-w-lg mx-auto px-4">
-        {/* <p className="text-slate-500 text-sm text-center mt-1">
+        <h1 className="text-2xl font-semibold text-center">My Chats</h1>
+        <p className="text-slate-500 text-sm text-center mt-1">
           See your matches and requests.
-        </p> */}
+        </p>
 
         {nothingToShow && (
           <p className="mt-8 text-center text-sm text-slate-500">
@@ -572,6 +566,6 @@ export default function Chats() {
           </section>
         )}
       </div>
-    </div>
+    // </div>
   );
 }

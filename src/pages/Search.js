@@ -68,26 +68,19 @@ export default function Search() {
      RENDER
   -------------------------------------------------------------------------- */
   return (
-    <div className="pt-8 pb-28 bg-white">
-
-      <header className="fixed top-0 left-0 w-full bg-white border-b z-40">
-        <div className="relative h-14 flex items-center px-4 max-w-md mx-auto">
-          <h1 className="absolute left-1/2 -translate-x-1/2 text-2xl font-semibold text-gray-900">
-            Search
-          </h1>
-        </div>
-      </header>
+    <div className="pb-28">
       <div className="max-w-md mx-auto px-5">
+
         {/* Title */}
-        {/* <h1 className="text-2xl font-semibold text-center text-gray-900">
+        <h1 className="text-2xl font-semibold text-center text-gray-900">
           Search
         </h1>
         <p className="text-sm text-center text-gray-500 mt-1">
-          Search your machine
-        </p> */}
+          Search your machine.
+        </p>
 
         {/* Search bar */}
-        <div className="flex items-center gap-3">
+        <div className="pt-8 flex items-center gap-3">
           <div className="relative flex-1">
             <MagnifyingGlassIcon className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
             <input

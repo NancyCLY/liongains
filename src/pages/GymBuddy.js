@@ -246,7 +246,8 @@ export default function GymBuddy() {
 
   
   return (
-    <div className="pt-16 px-4 pb-6 max-w-md mx-auto">
+    <div className="px-4 pb-6 max-w-md mx-auto px-5">
+
       {/* Title */}
       <h1 className="text-2xl font-semibold text-center">Find a Gym Buddy</h1>
       <p className="text-gray-600 text-sm text-center mt-1">
@@ -263,7 +264,7 @@ export default function GymBuddy() {
         <div className="overflow-x-auto">
           <div className="min-w-[350px]">
             {/* Header row: day-of-week + date */}
-            <div className="grid grid-cols-8 text-xs text-center font-medium bg-gray-50 border-b">
+            <div className="grid grid-cols-8 text-xs text-center font-medium bg-white border-b">
               <div className="py-2" />
               {DAYS.map((day) => (
                 <div key={day.id} className="py-1 flex flex-col items-center justify-center">
@@ -283,7 +284,7 @@ export default function GymBuddy() {
                   className="grid grid-cols-8 text-xs border-b last:border-b"
                 >
                   {/* Time label */}
-                  <div className="py-1.5 pl-2 pr-1 bg-gray-50 text-gray-700 border-r">
+                  <div className="py-1.5 pl-2 pr-1 bg-white text-gray-700 border-r">
                     {time}
                   </div>
 

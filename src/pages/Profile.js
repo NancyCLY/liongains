@@ -5,7 +5,7 @@ import {
 
 export default function Profile() {
   return (
-    <div className="min-h-screen bg-[#F5F6F8] pt-6 pb-32">
+    <div className="min-h-screen pb-32">
       <div className="max-w-md mx-auto px-4 space-y-6">
         {/* ================= HEADER ================= */}
         <header className="text-center">

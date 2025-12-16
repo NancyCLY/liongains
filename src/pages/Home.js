@@ -174,7 +174,7 @@ export default function Home() {
       <header className="fixed top-0 left-0 w-full bg-white border-b z-40">
         <div className="h-14 flex items-center justify-between px-4 max-w-md mx-auto">
           <img src={lionIcon} alt="LionGains" className="w-8 h-8" />
-          <h1 className="text-lg font-semibold text-gray-900">LionGains</h1>
+          <h1 className="text-2xl font-semibold text-gray-900">LionGains</h1>
           <button
             className="
               w-8 h-8 rounded-full border-2 border-blue-600
