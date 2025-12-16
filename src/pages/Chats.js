@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
+
 import {
   collection,
   doc,
@@ -41,6 +43,7 @@ function getInitials(nameOrEmail = "") {
 }
 
 export default function Chats() {
+  const navigate = useNavigate();
   const { currentUser } = useAuth();
 
   const [loading, setLoading] = useState(true);
@@ -286,8 +289,10 @@ export default function Chats() {
     }
   }
 
-  function handleStartChat(buddy) {
+  function handleChat(buddy) {
     alert(`Start chat with ${buddy.name}`);
+    navigate(`/chat/${buddy.id}`, { state: { buddy } });
+
   }
 
   // ---------- UI components ----------
@@ -474,10 +479,10 @@ export default function Chats() {
                     bottomRight={
                       <button
                         type="button"
-                        onClick={() => handleStartChat(buddy)}
+                        onClick={() => handleChat(buddy)}
                         className="px-5 py-1.5 rounded-full text-xs font-semibold transition shadow-sm bg-blue-600 text-white hover:bg-blue-700"
                       >
-                        Start chat
+                        Chat
                       </button>
                     }
                   />
