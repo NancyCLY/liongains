@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { ChevronLeftIcon } from "@heroicons/react/24/outline";
+
 import {
   collection,
   doc,
@@ -88,6 +91,7 @@ function formatHour12(hour24) {
 
 export default function FoundBuddies() {
   const { currentUser } = useAuth();
+  const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -124,6 +128,7 @@ export default function FoundBuddies() {
         }
 
         const userData = userSnap.data();
+        console.log(userData.availability);
         const currentAvailability = userData.availability || {};
 
         // ✅ outgoing/incoming are MAPS now
@@ -327,12 +332,27 @@ export default function FoundBuddies() {
     <div className="min-h-screen bg-slate-50 pt-20 pb-10">
       <div className="max-w-lg mx-auto px-4">
         {/* Header */}
+        {/* Header */}
+      <div className="relative mb-2">
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
+          className="absolute left-0 top-1/2 -translate-y-1/2 flex items-center gap-1 text-sm text-slate-600 hover:text-slate-900"
+          aria-label="Go back"
+        >
+          <ChevronLeftIcon className="w-5 h-5" />
+          Back
+        </button>
+
         <h1 className="text-3xl font-semibold text-center text-slate-900">
           Found buddies
         </h1>
-        <p className="text-slate-500 text-sm text-center mt-1">
-          Based on your latest availability.
-        </p>
+      </div>
+
+      <p className="text-slate-500 text-sm text-center mt-1">
+        Based on your latest availability.
+      </p>
+
 
         {/* Buddy list */}
         <div className="mt-6 space-y-4">

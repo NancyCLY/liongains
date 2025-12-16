@@ -78,8 +78,11 @@ export default function Profile() {
         }
 
         const userData = userSnap.data();
+        console.log(userData);
 
         // Keep null if missing; set to whatever is stored if present.
+        console.log(("availability" in userData));
+        console.log(userData.availability);
         if ("preferences" in userData) setPreferences(userData.preferences);
         if ("availability" in userData) setAvailability(userData.availability);
         if ("likedVideos" in userData) setLikedVideos(userData.likedVideos);
@@ -98,21 +101,35 @@ export default function Profile() {
   }, [currentUser]);
 
   const sortedAvailabilityEntries = useMemo(() => {
-    if (!availability || typeof availability !== "object") return [];
+  if (!availability || typeof availability !== "object") {
+    console.log(availability);
+    console.log("No availability data or invalid format");
+    return [];
+  }
+
     const entries = Object.entries(availability);
     entries.sort(([a], [b]) => a.localeCompare(b));
-    return entries.map(([date, hours]) => {
-      const hourList = Array.isArray(hours) ? [...hours] : [];
+
+    return entries.map(([date, hoursLike]) => {
+      const hourList = Array.isArray(hoursLike)
+        ? [...hoursLike]
+        : hoursLike && typeof hoursLike === "object"
+        ? Object.values(hoursLike)
+        : [];
+
       hourList.sort((x, y) => Number(x) - Number(y));
       return [date, hourList];
     });
   }, [availability]);
+
 
   const hasPreferences = Array.isArray(preferences) && preferences.length > 0;
 
   const hasAvailability =
     sortedAvailabilityEntries.length > 0 &&
     sortedAvailabilityEntries.some(([, hours]) => Array.isArray(hours) && hours.length > 0);
+
+  console.log("hasAvailability", hasAvailability);
 
   const showLikedVideos = Array.isArray(likedVideos) && likedVideos.length > 0;
 

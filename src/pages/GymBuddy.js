@@ -38,8 +38,7 @@ function getProfileImageSrc(userId) {
 const DAY_LABELS = ["Su", "M", "Tu", "W", "Th", "F", "Sa"];
 
 function timeToMilitaryHour(timeStr) {
-  // Examples: "1:00PM", "11:00AM", "12:00PM", "12:00AM"
-  const match = timeStr.match(/^(\d{1,2}):\d{2}\s*(AM|PM)$/i);
+  const match = timeStr.match(/^(\d{1,2})(AM|PM)$/i);
   if (!match) return null; // fallback for unexpected formats
 
   let hour = parseInt(match[1], 10);
@@ -252,7 +251,7 @@ export default function GymBuddy() {
       alert("Please select at least one time slot.");
       return;
     }
-
+    console.log("Slots to save:", slotsForSaving);
     const newAvailability = {};
 
     for (const slot of slotsForSaving) {
@@ -271,6 +270,7 @@ export default function GymBuddy() {
     for (const date in newAvailability) {
       newAvailability[date].sort((a, b) => a - b);
     }
+    console.log("New availability to save:", newAvailability);
 
     saveUserPreferences(currentUser, Array.from(selectedPrefs));
 
@@ -281,6 +281,7 @@ export default function GymBuddy() {
     }
 
     const userRef = doc(db, "users", currentUser.uid); 
+    console.log(currentUser.uid);
     const userSnap = await getDoc(userRef);
     if (userSnap.exists()) {
     // User already exists → update only the relevant fields
