@@ -8,6 +8,7 @@ import Upload from "./pages/Upload";
 import Login from "./pages/Login";
 import FoundBuddies from "./pages/FoundBuddies";
 import Chats from "./pages/Chats";
+import ExploreBuddies from "./pages/ExploreBuddies";
 
 import Navbar from "./components/Navbar";
 
@@ -51,6 +52,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Chats />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/explorebuddies"
+              element={
+                <ProtectedRoute>
+                  <ExploreBuddies />
                 </ProtectedRoute>
               }
             />

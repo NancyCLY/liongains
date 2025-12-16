@@ -15,6 +15,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from "../context/AuthContext";
 import { db, storage } from "../services/firebase";
 import { collection, getDocs,setDoc, getDoc, updateDoc, doc } from 'firebase/firestore';
+import { ArrowUpRightIcon } from "@heroicons/react/24/outline";
 import { useNavigate } from "react-router-dom";
 import { getSuggestedQuery } from '@testing-library/dom';
 
@@ -432,6 +433,15 @@ export default function GymBuddy() {
           {/* <button type="button" className="text-xs text-blue-600 hover:underline">
             View all
           </button> */}
+
+          <button
+            type="button"
+            onClick={() => navigate("/explorebuddies")} // or whatever route you want
+            className="flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700"
+          >
+            More
+            <ArrowUpRightIcon className="w-4 h-4" />
+          </button>
         </div>
 
         {loading ? (
