@@ -169,7 +169,7 @@ export default function Home() {
   }, [loadMore]);
 
   return (
-    <div className="pt-14 pb-32 bg-white">
+    <div className="pt-8 pb-28 bg-white">
       {/* HEADER */}
       <header className="fixed top-0 left-0 w-full bg-white border-b z-40">
         <div className="h-14 flex items-center justify-between px-4 max-w-md mx-auto">

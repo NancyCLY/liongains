@@ -18,7 +18,7 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-        {/* Top nav bar */}
+        {/* Bottom nav bar */}
         <Navbar />
 
         {/* Page content */}
