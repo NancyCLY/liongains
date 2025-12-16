@@ -177,7 +177,7 @@ export default function Home() {
           <h1 className="text-lg font-semibold text-gray-900">LionGains</h1>
           <button
             className="
-              w-9 h-9 rounded-full border-2 border-blue-600
+              w-8 h-8 rounded-full border-2 border-blue-600
               flex items-center justify-center
               text-blue-600
               active:scale-95 transition
