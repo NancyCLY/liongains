@@ -83,7 +83,7 @@ export default function Search() {
             aria-label="Open map"
             title="Map"
           >
-            <MapIcon className="h-6 w-6 text-gray-700" />
+            <MapIcon className="h-6 w-6 text-blue-400 text-blue-400" />
           </button>
         </div>
         <p className="text-sm text-center text-gray-500 mt-1">
