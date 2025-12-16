@@ -255,9 +255,9 @@ export default function GymBuddy() {
 
       {/* Availability card */}
       <section className="mt-4 bg-white rounded-xl shadow-sm border">
-        <div className="px-3 py-2 border-b">
+        {/* <div className="px-3 py-2 border-b">
           <h2 className="font-semibold text-sm">Your Availability</h2>
-        </div>
+        </div> */}
 
         {/* Whole grid can scroll horizontally, time rows scroll vertically */}
         <div className="overflow-x-auto">
