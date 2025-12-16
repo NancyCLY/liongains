@@ -308,7 +308,7 @@ export default function FoundBuddies() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 pt-20 pb-10">
+      <div className="min-h-screen bg-slate-50 pb-10">
         <div className="max-w-lg mx-auto px-4">
           <p className="text-sm text-slate-500 text-center">
             Loading your buddies…
@@ -320,7 +320,7 @@ export default function FoundBuddies() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-slate-50 pt-20 pb-10">
+      <div className="min-h-screen bg-slate-50 pb-10">
         <div className="max-w-lg mx-auto px-4">
           <p className="text-sm text-red-500 text-center">{error}</p>
         </div>
@@ -329,7 +329,7 @@ export default function FoundBuddies() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 pt-20 pb-10">
+    <div className="min-h-screen bg-slate-50 pb-10">
       <div className="max-w-lg mx-auto px-4">
         {/* Header */}
         {/* Header */}
