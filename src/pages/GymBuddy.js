@@ -20,6 +20,19 @@ import { useNavigate } from "react-router-dom";
 import { getSuggestedQuery } from '@testing-library/dom';
 
 
+const profileImages = require.context(
+  "../assets/profile",
+  false,
+  /\.(png|jpe?g|svg)$/
+);
+
+function getProfileImageSrc(userId) {
+  try {
+    return profileImages(`./${userId}.jpg`);
+  } catch {
+    return null;
+  }
+}
 
 
 const DAY_LABELS = ["Su", "M", "Tu", "W", "Th", "F", "Sa"];
@@ -132,20 +145,6 @@ export default function GymBuddy() {
 
     loadSuggestedBuddies();
   }, [currentUser]);
-
-  const profileImages = require.context(
-    "../assets/profile",
-    false,
-    /\.(png|jpe?g|svg)$/
-  );
-
-  function getProfileImageSrc(userId) {
-    try {
-      return profileImages(`./${userId}.jpg`);
-    } catch {
-      return null;
-    }
-  }
 
 
   const TIMES = [
@@ -459,14 +458,14 @@ export default function GymBuddy() {
                 title={`${b.name}`}
                 aria-label={`Suggested buddy ${b.name}`}
               >
-              <img
-                src={getProfileImageSrc(b.id)}
-                alt={b.name}
-                className="w-full h-full object-cover rounded-full"
-                onError={(e) => {
-                  e.currentTarget.style.display = "none";
-                }}
-              />
+                <img
+                  src={getProfileImageSrc(b.id)}
+                  alt={b.name}
+                  className="w-full h-full object-cover rounded-full"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                  }}
+                />
               </button>
             ))}
           </div>

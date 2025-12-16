@@ -18,6 +18,22 @@ const MAX_BUDDIES_TOTAL = 5; // total buddies a user can reach out to
 // ---------- Helpers ----------
 
 // currentAvailability & buddyAvailability are maps: { [isoDate]: number[] }
+
+const profileImages = require.context(
+  "../assets/profile",
+  false,
+  /\.(png|jpe?g|svg)$/
+);
+
+function getProfileImageSrc(userId) {
+  try {
+    return profileImages(`./${userId}.jpg`);
+  } catch {
+    return null;
+  }
+}
+
+
 function computeAllOverlappingSessions(
   currentAvailability = {},
   buddyAvailability = {}
@@ -352,12 +368,20 @@ export default function FoundBuddies() {
                 {/* Avatar */}
                 <div className="flex-shrink-0 flex items-center justify-center">
                   <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white font-semibold text-lg shadow-sm">
-                    {buddy.name
+                    {/* {buddy.name
                       .split(" ")
                       .map((w) => w[0])
                       .join("")
                       .slice(0, 2)
-                      .toUpperCase()}
+                      .toUpperCase()} */}
+                      <img
+                        src={getProfileImageSrc(buddy.id)}
+                        alt={buddy.name}
+                        className="w-full h-full object-cover rounded-full"
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none";
+                        }}
+                      />
                   </div>
                 </div>
 

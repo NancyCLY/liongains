@@ -11,6 +11,21 @@ import {
 } from "firebase/firestore";
 import { db } from "../services/firebase";
 
+const profileImages = require.context(
+  "../assets/profile",
+  false,
+  /\.(png|jpe?g|svg)$/
+);
+
+function getProfileImageSrc(userId) {
+  try {
+    return profileImages(`./${userId}.jpg`);
+  } catch {
+    return null;
+  }
+}
+
+
 function formatShortDate(isoDate) {
   if (!isoDate) return "";
   const d = new Date(`${isoDate}T00:00:00`);

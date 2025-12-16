@@ -11,6 +11,20 @@ import {
 } from "firebase/firestore";
 import { db } from "../services/firebase";
 
+const profileImages = require.context(
+  "../assets/profile",
+  false,
+  /\.(png|jpe?g|svg)$/
+);
+
+function getProfileImageSrc(userId) {
+  try {
+    return profileImages(`./${userId}.jpg`);
+  } catch {
+    return null;
+  }
+}
+
 function formatShortDate(isoDate) {
   if (!isoDate) return "";
   const d = new Date(`${isoDate}T00:00:00`);
@@ -286,7 +300,14 @@ export default function Chats() {
         {/* Avatar */}
         <div className="flex-shrink-0 flex items-center justify-center">
           <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white font-semibold text-lg shadow-sm">
-            {initials}
+            <img
+              src={getProfileImageSrc(buddy.id)}
+              alt={buddy.name}
+              className="w-full h-full object-cover rounded-full"
+              onError={(e) => {
+                e.currentTarget.style.display = "none";
+              }}
+            />
           </div>
         </div>
 
