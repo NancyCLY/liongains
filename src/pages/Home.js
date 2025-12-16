@@ -33,7 +33,7 @@ function VideoPost({ video }) {
   return (
     <article className="bg-white border-b">
       {/* USER ROW */}
-      <div className="flex items-center gap-3 px-4 pt-4">
+      <div className="flex items-center gap-3 px-5 pt-4">
         <div className="w-9 h-9 rounded-full bg-gray-300" />
         <span className="text-sm font-medium text-gray-800">
           @{posterName || "Unknown"}
@@ -54,12 +54,12 @@ function VideoPost({ video }) {
       </div>
 
       {/* TITLE */}
-      <div className="px-4 pt-3">
+      <div className="px-5 pt-3">
         <p className="text-sm font-medium text-gray-900">{title}</p>
       </div>
 
       {/* ACTION ROW */}
-      <div className="flex items-center justify-between px-4 py-3">
+      <div className="flex items-center justify-between px-5 py-3">
         {/* TAG */}
         <div>
           {tags.slice(0, 1).map((tag, i) => (
@@ -86,7 +86,7 @@ function VideoPost({ video }) {
       </div>
 
       {/* TIMESTAMP */}
-      <div className="px-4 pb-4 text-xs text-gray-400">
+      <div className="px-5 pb-4 text-xs text-gray-400">
         Posted at {timeLabel}
       </div>
     </article>
@@ -99,18 +99,18 @@ function VideoPost({ video }) {
 function SkeletonPost() {
   return (
     <div className="animate-pulse bg-white border-b">
-      <div className="flex items-center gap-3 px-4 pt-4">
+      <div className="flex items-center gap-3 px-5 pt-4">
         <div className="w-9 h-9 rounded-full bg-gray-200" />
         <div className="h-3 w-24 bg-gray-200 rounded" />
       </div>
 
       <div className="mt-3 mx-4 h-52 rounded-xl bg-gray-200" />
 
-      <div className="px-4 pt-3">
+      <div className="px-5 pt-3">
         <div className="h-3 w-40 bg-gray-200 rounded" />
       </div>
 
-      <div className="px-4 py-3 flex justify-between">
+      <div className="px-5 py-3 flex justify-between">
         <div className="h-5 w-16 bg-gray-200 rounded-full" />
         <div className="h-6 w-6 bg-gray-200 rounded-full" />
       </div>
@@ -172,12 +172,12 @@ export default function Home() {
     <div className="pt-8 pb-28 bg-white">
       {/* HEADER */}
       <header className="fixed top-0 left-0 w-full bg-white border-b z-40">
-        <div className="h-14 flex items-center justify-between px-4 max-w-md mx-auto">
-          <img src={lionIcon} alt="LionGains" className="w-8 h-8" />
+        <div className="h-14 flex items-center justify-between 5 max-w-md mx-auto">
+          <img src={lionIcon} alt="LionGains" className="mx-4 w-8 h-8" />
           <h1 className="text-2xl font-semibold text-gray-900">LionGains</h1>
           <button
             className="
-              w-8 h-8 rounded-full border-2 border-blue-400
+              mx-4 w-8 h-8 rounded-full border-2 border-blue-400
               flex items-center justify-center
               text-blue-400
               active:scale-95 transition

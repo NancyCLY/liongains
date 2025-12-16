@@ -52,7 +52,7 @@ export default function Search() {
       <button
         type="button"
         onClick={onClick}
-        className={`px-4 py-1.5 rounded-full text-sm font-medium border transition
+        className={`px-5 py-1.5 rounded-full text-sm font-medium border transition
           ${
             active
               ? "bg-blue-100 text-blue-700 border-blue-300"

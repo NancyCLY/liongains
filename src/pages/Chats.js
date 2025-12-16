@@ -357,7 +357,7 @@ export default function Chats() {
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 pt-20 pb-10">
-        <div className="max-w-lg mx-auto px-4">
+        <div className="max-w-lg mx-auto px-5">
           <p className="text-center text-sm text-slate-500">
             Loading your buddies…
           </p>
@@ -369,7 +369,7 @@ export default function Chats() {
   if (error) {
     return (
       <div className="min-h-screen bg-slate-50 pt-20 pb-10">
-        <div className="max-w-lg mx-auto px-4">
+        <div className="max-w-lg mx-auto px-5">
           <p className="text-center text-sm text-red-500">{error}</p>
         </div>
       </div>
@@ -383,7 +383,7 @@ export default function Chats() {
 
   return (
     // <div className="min-h-screen bg-slate-50 pb-10">
-      <div className="max-w-lg mx-auto px-4">
+      <div className="max-w-lg mx-auto px-5">
         <h1 className="text-2xl font-semibold text-center">My Chats</h1>
         <p className="text-slate-500 text-sm text-center mt-1">
           See your matches and requests.
@@ -454,7 +454,7 @@ export default function Chats() {
                       <button
                         type="button"
                         onClick={() => handleStartChat(buddy)}
-                        className="px-4 py-1.5 rounded-full text-xs font-semibold transition shadow-sm bg-blue-600 text-white hover:bg-blue-700"
+                        className="px-5 py-1.5 rounded-full text-xs font-semibold transition shadow-sm bg-blue-600 text-white hover:bg-blue-700"
                       >
                         Start chat
                       </button>
@@ -555,7 +555,7 @@ export default function Chats() {
                   //   <button
                   //     type="button"
                   //     onClick={() => handleCancelRequest(buddy)}
-                  //     className="px-4 py-1.5 rounded-full text-xs font-semibold bg-red-50 text-red-600 border border-red-200 hover:bg-red-100"
+                  //     className="px-5 py-1.5 rounded-full text-xs font-semibold bg-red-50 text-red-600 border border-red-200 hover:bg-red-100"
                   //   >
                   //     Cancel
                   //   </button>
