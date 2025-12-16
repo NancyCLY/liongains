@@ -40,7 +40,7 @@ export default function Chats() {
 
   useEffect(() => {
     if (!currentUser) {
-      setError("You must be logged in to view your buddies.");
+      setError("You must be logged in to view your chats.");
       setLoading(false);
       return;
     }
@@ -110,8 +110,8 @@ export default function Chats() {
         setIncomingRequests(incomingArr);
         setOutgoingRequests(outgoingArr);
       } catch (err) {
-        console.error("Error loading buddies:", err);
-        setError("Failed to load buddies.");
+        console.error("Error loading chats:", err);
+        setError("Failed to load chats.");
       } finally {
         setLoading(false);
       }
@@ -385,7 +385,7 @@ export default function Chats() {
     <div className="min-h-screen bg-slate-50 pt-20 pb-10">
       <div className="max-w-lg mx-auto px-4">
         <h1 className="text-3xl font-semibold text-center text-slate-900">
-          My buddies
+          My chats
         </h1>
         <p className="text-slate-500 text-sm text-center mt-1">
           See your matches and requests.
