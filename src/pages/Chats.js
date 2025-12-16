@@ -301,47 +301,52 @@ export default function Chats() {
     const initials = getInitials(buddy.name || buddy.email);
 
     return (
-      <article className="bg-white rounded-2xl shadow-sm border border-slate-100 px-6 py-4 flex gap-5">
-        {/* Avatar */}
-        <div className="flex-shrink-0 flex items-center justify-center">
-          <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white font-semibold text-lg shadow-sm">
-            <img
-              src={getProfileImageSrc(buddy.id)}
-              alt={buddy.name}
-              className="w-full h-full object-cover rounded-full"
-              onError={(e) => {
-                e.currentTarget.style.display = "none";
-              }}
-            />
-          </div>
+    <article className="bg-white rounded-2xl shadow-sm border border-slate-100 px-6 py-4 flex gap-5">
+      {/* Avatar */}
+      <div className="flex-shrink-0 flex items-center justify-center">
+        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 overflow-hidden shadow-sm">
+          <img
+            src={getProfileImageSrc(buddy.id)}
+            alt={buddy.name}
+            className="w-full h-full object-cover rounded-full"
+            onError={(e) => {
+              e.currentTarget.style.display = "none";
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Content + right rail */}
+      <div className="flex-1 min-w-0 flex">
+        {/* Left content */}
+        <div className="flex-1 min-w-0">
+          <h2 className="text-sm font-semibold text-slate-900 truncate">
+            {buddy.name}
+          </h2>
+
+          {buddy.email && (
+            <p className="text-xs text-slate-500 truncate">{buddy.email}</p>
+          )}
+
+          {label && (
+            <p className="mt-2 text-[11px] text-slate-500">{label}</p>
+          )}
         </div>
 
-        {/* Content + right side */}
-        <div className="flex-1 flex items-stretch">
-          {/* Left / middle content */}
-          <div className="flex flex-col justify-center flex-1 max-w-[260px]">
-            <h2 className="text-sm font-semibold text-slate-900 truncate">
-              {buddy.name}
-            </h2>
-
-            {buddy.email && (
-              <p className="text-xs text-slate-500 truncate">{buddy.email}</p>
-            )}
-
-            {label && (
-              <p className="mt-2 text-[11px] text-slate-500">{label}</p>
-            )}
+        {/* Right rail: SAME right edge for ... and Chat */}
+        <div className="ml-4 w-[96px] flex flex-col items-end">
+          {/* Align ... with username (approx) */}
+          <div className="h-5 flex items-center justify-end">
+            {topRight}
           </div>
 
-          {/* Right column: menu at top-right + button at bottom-right */}
-          <div className="flex flex-col items-end ml-4 min-w-[96px]">
-            <div className="w-full flex justify-end">{topRight}</div>
-            <div className="mt-auto">{bottomRight}</div>
-          </div>
+          {/* Push button to the bottom like before */}
+          <div className="mt-auto">{bottomRight}</div>
         </div>
-      </article>
-    );
-  }
+      </div>
+    </article>
+  );
+}
 
   function ThreeDotMenu({ buddy, items = [] }) {
     return (
@@ -448,7 +453,7 @@ export default function Chats() {
                       <div className="relative">
                         <button
                           type="button"
-                          className="p-2 rounded-full hover:bg-slate-100 text-slate-500"
+                          className="p-2 rounded-full hover:bg-slate-100 text-slate-500 leading-none flex items-center justify-center"
                           onClick={() =>
                             setOpenMenuBuddyId((prev) =>
                               prev === buddy.id ? null : buddy.id
@@ -480,7 +485,7 @@ export default function Chats() {
                       <button
                         type="button"
                         onClick={() => handleChat(buddy)}
-                        className="px-5 py-1.5 rounded-full text-xs font-semibold transition shadow-sm bg-blue-600 text-white hover:bg-blue-700"
+                        className="px-5 py-1.5 rounded-full text-xs font-semibold transition shadow-sm bg-blue-600 text-white hover:bg-blue-700 mr-2"
                       >
                         Chat
                       </button>

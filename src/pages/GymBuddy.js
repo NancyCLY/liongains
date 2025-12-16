@@ -309,7 +309,7 @@ export default function GymBuddy() {
 
   
   return (
-    <div className="px-4 pb-6 max-w-md mx-auto px-5">
+    <div className="px-4 pb-32 max-w-md mx-auto px-5">
 
       {/* Title */}
       <h1 className="text-2xl font-semibold text-center">Find a Gym Buddy</h1>
