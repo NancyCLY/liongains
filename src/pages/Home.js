@@ -117,7 +117,7 @@ function VideoPost({ video }) {
 function SkeletonPost() {
   return (
     <div className="animate-pulse bg-white border-b">
-      <div className="flex items-center gap-3 px-5 pt-4">
+      <div className="flex items-center gap-3 px-5 pt-2">
         <div className="w-9 h-9 rounded-full bg-gray-200" />
         <div className="h-3 w-24 bg-gray-200 rounded" />
       </div>
@@ -209,7 +209,7 @@ export default function Home() {
       </header>
 
       {/* FEED */}
-      <main className="max-w-md mx-auto space-y-6">
+      <main className="max-w-md mx-auto space-y-3">
         {initialLoading &&
           Array.from({ length: 3 }).map((_, i) => <SkeletonPost key={i} />)}
 
