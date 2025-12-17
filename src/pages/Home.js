@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { PlusIcon, HeartIcon } from "@heroicons/react/24/solid";
 import lionIcon from "../assets/lion-blue.png";
+import { useNavigate } from "react-router-dom";
+
 
 import { fetchInitialVideos, fetchMoreVideos } from "../services/videoService";
 
@@ -142,6 +144,7 @@ export default function Home() {
   const [lastDoc, setLastDoc] = useState(null);
   const [loadingMore, setLoadingMore] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
+  const navigate = useNavigate();
 
   /* INITIAL FETCH */
   useEffect(() => {
@@ -192,6 +195,7 @@ export default function Home() {
           <img src={lionIcon} alt="LionGains" className="mx-4 w-8 h-8" />
           <h1 className="text-2xl font-semibold text-gray-900">LionGains</h1>
           <button
+            onClick={() => navigate("/upload")}
             className="
               mx-4 w-8 h-8 rounded-full border-2 border-blue-400
               flex items-center justify-center
