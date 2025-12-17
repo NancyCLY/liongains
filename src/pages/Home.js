@@ -50,7 +50,7 @@ function VideoPost({ video }) {
   return (
     <article className="bg-white border-b">
       {/* USER ROW */}
-      <div className="flex items-center gap-3 px-5 pt-4">
+      <div className="flex items-center gap-3 px-5 pt-2">
         {/* <div className="w-9 h-9 rounded-full bg-gray-300" /> */}
         <img
           src={getAvatarSrc(posterId) ?? "/default-avatar.png"}
