@@ -63,7 +63,7 @@ export default function Search() {
       <button
         type="button"
         onClick={onClick}
-        className={`px-4 py-1.5 rounded-full text-sm font-medium border transition
+        className={`px-5 py-1.5 rounded-full text-sm font-medium border transition
           ${
             active
               ? "bg-blue-100 text-blue-700 border-blue-300"
@@ -86,6 +86,16 @@ export default function Search() {
           <h1 className="absolute left-1/2 -translate-x-1/2 text-2xl font-semibold text-gray-900">
             Search
           </h1>
+
+          <button
+            type="button"
+            onClick={() => console.log("Open map")}
+            className="absolute right-0 flex h-10 w-10 items-center justify-center rounded-full hover:bg-gray-100 transition"
+            aria-label="Open map"
+            title="Map"
+          >
+            <MapIcon className="h-6 w-6 text-blue-400 text-blue-400" />
+          </button>
         </div>
       </header>
 
@@ -102,10 +112,6 @@ export default function Search() {
               className="w-full h-11 pl-11 pr-4 rounded-full border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100"
             />
           </div>
-
-          <button className="h-11 px-5 rounded-full border border-gray-200 text-sm font-medium text-gray-700">
-            Map
-          </button>
         </div>
 
         {/* SORTING OPTIONS */}

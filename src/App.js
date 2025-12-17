@@ -8,6 +8,8 @@ import Upload from "./pages/Upload";
 import Login from "./pages/Login";
 import FoundBuddies from "./pages/FoundBuddies";
 import Chats from "./pages/Chats";
+import ExploreBuddies from "./pages/ExploreBuddies";
+import ChatRoom from "./pages/ChatRoom";
 
 import Navbar from "./components/Navbar";
 
@@ -55,6 +57,14 @@ function App() {
               }
             />
             <Route
+              path="/explorebuddies"
+              element={
+                <ProtectedRoute>
+                  <ExploreBuddies />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/profile"
               element={
                 <ProtectedRoute>
@@ -67,6 +77,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Upload />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/chat/:buddyId"
+              element={
+                <ProtectedRoute>
+                  <ChatRoom />
                 </ProtectedRoute>
               }
             />

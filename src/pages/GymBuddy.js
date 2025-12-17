@@ -11,20 +11,34 @@
   Navbar already implemented globally.
 */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from "../context/AuthContext";
 import { db, storage } from "../services/firebase";
 import { collection, getDocs,setDoc, getDoc, updateDoc, doc } from 'firebase/firestore';
+import { ArrowUpRightIcon } from "@heroicons/react/24/outline";
 import { useNavigate } from "react-router-dom";
+import { getSuggestedQuery } from '@testing-library/dom';
 
 
+const profileImages = require.context(
+  "../assets/profile",
+  false,
+  /\.(png|jpe?g|svg)$/
+);
+
+function getProfileImageSrc(userId) {
+  try {
+    return profileImages(`./${userId}.jpg`);
+  } catch {
+    return null;
+  }
+}
 
 
 const DAY_LABELS = ["Su", "M", "Tu", "W", "Th", "F", "Sa"];
 
 function timeToMilitaryHour(timeStr) {
-  // Examples: "1:00PM", "11:00AM", "12:00PM", "12:00AM"
-  const match = timeStr.match(/^(\d{1,2}):\d{2}\s*(AM|PM)$/i);
+  const match = timeStr.match(/^(\d{1,2})(AM|PM)$/i);
   if (!match) return null; // fallback for unexpected formats
 
   let hour = parseInt(match[1], 10);
@@ -78,11 +92,59 @@ function getNext7DaysFromTomorrow() {
 
 export default function GymBuddy() {
 
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
 
   const navigate = useNavigate();
   const { currentUser } = useAuth();
 
   const DAYS = getNext7DaysFromTomorrow();
+
+  const [suggestedBuddies, setSuggestedBuddies] = useState(new Set());
+
+  useEffect(() => {
+    if (!currentUser) {
+      setError("You must be logged in to see matches.");
+      setLoading(false);
+      return;
+    }
+
+    async function loadSuggestedBuddies() {
+
+      try {
+        setLoading(true);
+        setError("");
+
+        const usersSnap = await getDocs(collection(db, "users"));
+
+        const suggestedBuddies = [];
+        usersSnap.forEach((buddyDoc) => {
+          const buddyId = buddyDoc.id;          
+          const buddyData = buddyDoc.data();
+
+          if (buddyId !== currentUser.uid) {
+            suggestedBuddies.push({
+              id: buddyId,
+              name: buddyData.username || buddyData.email || "Gym Buddy",
+            });
+          }
+        });
+
+        setSuggestedBuddies(suggestedBuddies.slice(0, 5));
+
+
+      } catch (err) {
+        console.error("Error loading matches:", err);
+        setError("There was an error loading your matches.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadSuggestedBuddies();
+  }, [currentUser]);
+
 
   const TIMES = [
     "6AM",
@@ -189,7 +251,7 @@ export default function GymBuddy() {
       alert("Please select at least one time slot.");
       return;
     }
-
+    console.log("Slots to save:", slotsForSaving);
     const newAvailability = {};
 
     for (const slot of slotsForSaving) {
@@ -208,6 +270,7 @@ export default function GymBuddy() {
     for (const date in newAvailability) {
       newAvailability[date].sort((a, b) => a - b);
     }
+    console.log("New availability to save:", newAvailability);
 
     saveUserPreferences(currentUser, Array.from(selectedPrefs));
 
@@ -218,6 +281,7 @@ export default function GymBuddy() {
     }
 
     const userRef = doc(db, "users", currentUser.uid); 
+    console.log(currentUser.uid);
     const userSnap = await getDoc(userRef);
     if (userSnap.exists()) {
     // User already exists → update only the relevant fields
@@ -246,7 +310,8 @@ export default function GymBuddy() {
 
   
   return (
-    <div className="pt-16 px-4 pb-6 max-w-md mx-auto">
+    <div className="px-4 pb-32 max-w-md mx-auto px-5">
+
       {/* Title */}
       <h1 className="text-2xl font-semibold text-center">Find a Gym Buddy</h1>
       <p className="text-gray-600 text-sm text-center mt-1">
@@ -254,7 +319,7 @@ export default function GymBuddy() {
       </p>
 
       {/* Availability card */}
-      <section className="mt-4 bg-white rounded-xl shadow-sm border">
+      <section className="mt-4 bg-white rounded-xl shadow-sm border overflow-hidden">
         {/* <div className="px-3 py-2 border-b">
           <h2 className="font-semibold text-sm">Your Availability</h2>
         </div> */}
@@ -263,9 +328,10 @@ export default function GymBuddy() {
         <div className="overflow-x-auto">
           <div className="min-w-[350px]">
             {/* Header row: day-of-week + date */}
-            <div className="grid grid-cols-8 text-xs text-center font-medium bg-gray-50 border-b">
+            <div className="grid grid-cols-8 text-xs text-center font-medium bg-white border-b rounded-tl-full rounded-tr-full">
               <div className="py-2" />
               {DAYS.map((day) => (
+                
                 <div key={day.id} className="py-1 flex flex-col items-center justify-center">
                   <span className="font-semibold">{day.label}</span>
                   <span className="text-[10px] text-gray-500">
@@ -277,18 +343,18 @@ export default function GymBuddy() {
 
             {/* Scrollable body – THIS is what makes it shorter on mobile */}
             <div className="max-h-64 overflow-y-auto">
-              {TIMES.map((time) => (
+              {TIMES.map((time, timeIdx) => (
                 <div
                   key={time}
                   className="grid grid-cols-8 text-xs border-b last:border-b"
                 >
                   {/* Time label */}
-                  <div className="py-1.5 pl-2 pr-1 bg-gray-50 text-gray-700 border-r">
+                  <div className="py-1.5 pl-2 pr-1 bg-white text-gray-700 border-r rounded-bl-full">
                     {time}
                   </div>
 
                   {/* Slots */}
-                  {DAYS.map((day) => {
+                  {DAYS.map((day, dayIdx) => {
                     const dayId = day.id; // "YYYY-MM-DD"
                     const key = `${dayId}|${time}`;
                     const isSelected = selectedSlots.has(key);
@@ -298,11 +364,15 @@ export default function GymBuddy() {
                         key={key}
                         type="button"
                         onClick={() => toggleSlot(dayId, time)}
-                        className={`h-7 border-r text-transparent ${
-                          isSelected
-                            ? "bg-blue-500"
-                            : "bg-white hover:bg-blue-50"
-                        }`}
+                        className={`h-7 border-r text-transparent
+                          ${isSelected ? "bg-blue-500" : "bg-white"}
+                          ${
+                            timeIdx === TIMES.length - 1 &&
+                            dayIdx === DAYS.length - 1
+                              ? "rounded-br-xl"
+                              : ""
+                          }
+                        `}
                         aria-label={`${day.label} ${day.displayDate} ${time}`}
                       />
                     );
@@ -362,32 +432,52 @@ export default function GymBuddy() {
       {/* Meet buddies preview */}
       <section className="mt-6">
         <div className="flex items-center justify-between mb-2">
-          <button
-            type="button"
-            className="text-sm font-semibold text-gray-800"
-          >
+          <button type="button" className="text-sm font-semibold text-gray-800">
             Meet buddies
           </button>
+          {/* <button type="button" className="text-xs text-blue-600 hover:underline">
+            View all
+          </button> */}
+
           <button
             type="button"
-            className="text-xs text-blue-600 hover:underline"
+            onClick={() => navigate("/explorebuddies")} // or whatever route you want
+            className="flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700"
           >
-            View all
+            More
+            <ArrowUpRightIcon className="w-4 h-4" />
           </button>
         </div>
 
-        <div className="flex items-center gap-3">
-          {[1, 2, 3, 4].map((i) => (
-            <button
-              key={i}
-              type="button"
-              className="w-10 h-10 rounded-full bg-gray-200 border border-gray-300 flex items-center justify-center text-xs text-gray-600"
-            >
-              U{i}
-            </button>
-          ))}
-        </div>
+        {loading ? (
+          <p className="text-xs text-gray-500">Loading suggestions…</p>
+        ) : suggestedBuddies.length === 0 ? (
+          <p className="text-xs text-gray-500">
+            No suggestions yet — try selecting more availability.
+          </p>
+        ) : (
+          <div className="flex items-center gap-3">
+            {suggestedBuddies.map((b) => (
+              <button
+                type="button"
+                className="w-10 h-10 rounded-full bg-gray-200 border border-gray-300 flex items-center justify-center text-xs text-gray-700"
+                title={`${b.name}`}
+                aria-label={`Suggested buddy ${b.name}`}
+              >
+                <img
+                  src={getProfileImageSrc(b.id)}
+                  alt={b.name}
+                  className="w-full h-full object-cover rounded-full"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                  }}
+                />
+              </button>
+            ))}
+          </div>
+        )}
       </section>
+
     </div>
   );
 }

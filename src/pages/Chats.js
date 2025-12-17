@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
+
 import {
   collection,
   doc,
@@ -10,6 +12,20 @@ import {
   arrayUnion,
 } from "firebase/firestore";
 import { db } from "../services/firebase";
+
+const profileImages = require.context(
+  "../assets/profile",
+  false,
+  /\.(png|jpe?g|svg)$/
+);
+
+function getProfileImageSrc(userId) {
+  try {
+    return profileImages(`./${userId}.jpg`);
+  } catch {
+    return null;
+  }
+}
 
 function formatShortDate(isoDate) {
   if (!isoDate) return "";
@@ -27,6 +43,7 @@ function getInitials(nameOrEmail = "") {
 }
 
 export default function Chats() {
+  const navigate = useNavigate();
   const { currentUser } = useAuth();
 
   const [loading, setLoading] = useState(true);
@@ -272,8 +289,10 @@ export default function Chats() {
     }
   }
 
-  function handleStartChat(buddy) {
+  function handleChat(buddy) {
     alert(`Start chat with ${buddy.name}`);
+    navigate(`/chat/${buddy.id}`, { state: { buddy } });
+
   }
 
   // ---------- UI components ----------
@@ -282,40 +301,52 @@ export default function Chats() {
     const initials = getInitials(buddy.name || buddy.email);
 
     return (
-      <article className="bg-white rounded-2xl shadow-sm border border-slate-100 px-6 py-4 flex gap-5">
-        {/* Avatar */}
-        <div className="flex-shrink-0 flex items-center justify-center">
-          <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white font-semibold text-lg shadow-sm">
-            {initials}
-          </div>
+    <article className="bg-white rounded-2xl shadow-sm border border-slate-100 px-6 py-4 flex gap-5">
+      {/* Avatar */}
+      <div className="flex-shrink-0 flex items-center justify-center">
+        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 overflow-hidden shadow-sm">
+          <img
+            src={getProfileImageSrc(buddy.id)}
+            alt={buddy.name}
+            className="w-full h-full object-cover rounded-full"
+            onError={(e) => {
+              e.currentTarget.style.display = "none";
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Content + right rail */}
+      <div className="flex-1 min-w-0 flex">
+        {/* Left content */}
+        <div className="flex-1 min-w-0">
+          <h2 className="text-sm font-semibold text-slate-900 truncate">
+            {buddy.name}
+          </h2>
+
+          {buddy.email && (
+            <p className="text-xs text-slate-500 truncate">{buddy.email}</p>
+          )}
+
+          {label && (
+            <p className="mt-2 text-[11px] text-slate-500">{label}</p>
+          )}
         </div>
 
-        {/* Content + right side */}
-        <div className="flex-1 flex items-stretch">
-          {/* Left / middle content */}
-          <div className="flex flex-col justify-center flex-1 max-w-[260px]">
-            <h2 className="text-sm font-semibold text-slate-900 truncate">
-              {buddy.name}
-            </h2>
-
-            {buddy.email && (
-              <p className="text-xs text-slate-500 truncate">{buddy.email}</p>
-            )}
-
-            {label && (
-              <p className="mt-2 text-[11px] text-slate-500">{label}</p>
-            )}
+        {/* Right rail: SAME right edge for ... and Chat */}
+        <div className="ml-4 w-[96px] flex flex-col items-end">
+          {/* Align ... with username (approx) */}
+          <div className="h-5 flex items-center justify-end">
+            {topRight}
           </div>
 
-          {/* Right column: menu at top-right + button at bottom-right */}
-          <div className="flex flex-col items-end ml-4 min-w-[96px]">
-            <div className="w-full flex justify-end">{topRight}</div>
-            <div className="mt-auto">{bottomRight}</div>
-          </div>
+          {/* Push button to the bottom like before */}
+          <div className="mt-auto">{bottomRight}</div>
         </div>
-      </article>
-    );
-  }
+      </div>
+    </article>
+  );
+}
 
   function ThreeDotMenu({ buddy, items = [] }) {
     return (
@@ -357,7 +388,7 @@ export default function Chats() {
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 pt-20 pb-10">
-        <div className="max-w-lg mx-auto px-4">
+        <div className="max-w-lg mx-auto px-5">
           <p className="text-center text-sm text-slate-500">
             Loading your buddies…
           </p>
@@ -369,7 +400,7 @@ export default function Chats() {
   if (error) {
     return (
       <div className="min-h-screen bg-slate-50 pt-20 pb-10">
-        <div className="max-w-lg mx-auto px-4">
+        <div className="max-w-lg mx-auto px-5">
           <p className="text-center text-sm text-red-500">{error}</p>
         </div>
       </div>
@@ -382,18 +413,12 @@ export default function Chats() {
     outgoingRequests.length === 0;
 
   return (
-    <div className="min-h-screen bg-slate-50 pt-8 pb-10">
-      <header className="fixed top-0 left-0 w-full bg-white border-b z-40">
-        <div className="relative h-14 flex items-center px-4 max-w-md mx-auto">
-          <h1 className="absolute left-1/2 -translate-x-1/2 text-2xl font-semibold text-gray-900">
-            My Chats
-          </h1>
-        </div>
-      </header>
-      <div className="max-w-lg mx-auto px-4">
-        {/* <p className="text-slate-500 text-sm text-center mt-1">
+    // <div className="min-h-screen bg-slate-50 pb-10">
+      <div className="max-w-lg mx-auto px-5">
+        <h1 className="text-2xl font-semibold text-center">My Chats</h1>
+        <p className="text-slate-500 text-sm text-center mt-1">
           See your matches and requests.
-        </p> */}
+        </p>
 
         {nothingToShow && (
           <p className="mt-8 text-center text-sm text-slate-500">
@@ -428,7 +453,7 @@ export default function Chats() {
                       <div className="relative">
                         <button
                           type="button"
-                          className="p-2 rounded-full hover:bg-slate-100 text-slate-500"
+                          className="p-2 rounded-full hover:bg-slate-100 text-slate-500 leading-none flex items-center justify-center"
                           onClick={() =>
                             setOpenMenuBuddyId((prev) =>
                               prev === buddy.id ? null : buddy.id
@@ -459,10 +484,10 @@ export default function Chats() {
                     bottomRight={
                       <button
                         type="button"
-                        onClick={() => handleStartChat(buddy)}
-                        className="px-4 py-1.5 rounded-full text-xs font-semibold transition shadow-sm bg-blue-600 text-white hover:bg-blue-700"
+                        onClick={() => handleChat(buddy)}
+                        className="px-5 py-1.5 rounded-full text-xs font-semibold transition shadow-sm bg-blue-600 text-white hover:bg-blue-700 mr-2"
                       >
-                        Start chat
+                        Chat
                       </button>
                     }
                   />
@@ -561,7 +586,7 @@ export default function Chats() {
                   //   <button
                   //     type="button"
                   //     onClick={() => handleCancelRequest(buddy)}
-                  //     className="px-4 py-1.5 rounded-full text-xs font-semibold bg-red-50 text-red-600 border border-red-200 hover:bg-red-100"
+                  //     className="px-5 py-1.5 rounded-full text-xs font-semibold bg-red-50 text-red-600 border border-red-200 hover:bg-red-100"
                   //   >
                   //     Cancel
                   //   </button>
@@ -572,6 +597,6 @@ export default function Chats() {
           </section>
         )}
       </div>
-    </div>
+    // </div>
   );
 }
