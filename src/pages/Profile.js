@@ -56,6 +56,7 @@ export default function Profile() {
 
   // optional display fields
   const [displayName, setDisplayName] = useState("User");
+  const [username, setUsername] = useState("User");
 
   useEffect(() => {
     if (!currentUser) {
@@ -88,6 +89,7 @@ export default function Profile() {
         if ("likedVideos" in userData) setLikedVideos(userData.likedVideos);
 
         setDisplayName(userData.displayName || currentUser.displayName || "User");
+        setUsername(userData.username || currentUser.username || "User");
         setLevel(userData.experienceLevel || "");
       } catch (err) {
         console.error(err);
@@ -174,7 +176,7 @@ export default function Profile() {
           </div>
 
           <div className="flex-1">
-            <p className="font-semibold text-gray-900">{displayName}</p>
+            <p className="font-semibold text-gray-900">{username}</p>
             <p className="text-sm text-gray-500">{level}</p>
 
             <button className="mt-2 px-4 py-1.5 text-sm font-medium bg-blue-500 text-white rounded-full">
