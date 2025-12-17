@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import { MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { fetchVideosForSearch } from "../services/videoService";
+import gymMap from "../assets/gym-map.png"; // 👈 put your map image here
 
 export default function Search() {
   /* --------------------------------------------------------------------------
@@ -12,9 +13,10 @@ export default function Search() {
   const [alphabetical, setAlphabetical] = useState(false);
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showMap, setShowMap] = useState(false); // 👈 NEW
 
   /* --------------------------------------------------------------------------
-     FETCH VIDEOS ON LOAD
+     FETCH VIDEOS
   -------------------------------------------------------------------------- */
   useEffect(() => {
     async function load() {
@@ -26,28 +28,24 @@ export default function Search() {
   }, []);
 
   /* --------------------------------------------------------------------------
-     FILTER + SEARCH LOGIC (CORRECTED)
+     SEARCH + FILTER LOGIC
   -------------------------------------------------------------------------- */
   const filteredVideos = useMemo(() => {
     let list = videos;
 
-    // 1️⃣ Text search (partial title match)
     if (query.trim()) {
       const q = query.toLowerCase();
       list = list.filter((v) => v.title?.toLowerCase().includes(q));
     }
 
-    // 2️⃣ Muscle group filter (tags)
     if (activeMuscle) {
       list = list.filter((v) => v.tags?.includes(activeMuscle));
     }
 
-    // 3️⃣ Location filter (ALSO tags)
     if (activeLocation) {
       list = list.filter((v) => v.tags?.includes(activeLocation));
     }
 
-    // 4️⃣ Sorting
     if (alphabetical) {
       list = [...list].sort((a, b) => a.title.localeCompare(b.title));
     }
@@ -56,7 +54,7 @@ export default function Search() {
   }, [videos, query, activeMuscle, activeLocation, alphabetical]);
 
   /* --------------------------------------------------------------------------
-     PILL COMPONENT
+     PILL
   -------------------------------------------------------------------------- */
   function Pill({ label, active, onClick }) {
     return (
@@ -103,7 +101,10 @@ export default function Search() {
             />
           </div>
 
-          <button className="h-11 px-5 rounded-full border border-gray-200 text-sm font-medium text-gray-700">
+          <button
+            onClick={() => setShowMap(true)} // 👈 OPEN MODAL
+            className="h-11 px-5 rounded-full border border-gray-200 text-sm font-medium text-gray-700"
+          >
             Map
           </button>
         </div>
@@ -115,7 +116,7 @@ export default function Search() {
           </h2>
 
           <div className="bg-white border border-gray-200 rounded-2xl p-5 space-y-5">
-            {/* Muscle group */}
+            {/* Muscle */}
             <div>
               <p className="text-sm font-medium text-gray-800 mb-2">
                 Muscle group
@@ -180,21 +181,20 @@ export default function Search() {
                   key={v.id}
                   className="flex items-center gap-4 p-4 bg-white border border-gray-200 rounded-2xl"
                 >
-                  {/* Thumbnail */}
                   <img
                     src={`https://img.youtube.com/vi/${v.youtubeId}/hqdefault.jpg`}
                     alt={v.title}
                     className="w-14 h-14 rounded-lg object-cover"
                   />
-
-                  {/* Info */}
                   <div>
                     <p className="text-sm font-medium text-gray-900">
                       {v.title}
                     </p>
-                    <p className="text-xs text-gray-500">
-                      {v.tags?.[0] || "Workout"}
-                    </p>
+                    <div className="text-xs text-gray-500 space-x-2">
+                      {v.tags?.map((tag) => (
+                        <span key={tag}>{tag}</span>
+                      ))}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -202,6 +202,28 @@ export default function Search() {
           )}
         </section>
       </div>
+
+      {/* MAP MODAL */}
+      {showMap && (
+        <div
+          className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center px-4"
+          onClick={() => setShowMap(false)}
+        >
+          <div
+            className="relative bg-white rounded-2xl p-4 max-w-md w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setShowMap(false)}
+              className="absolute top-3 right-3"
+            >
+              <XMarkIcon className="w-6 h-6 text-gray-500" />
+            </button>
+
+            <img src={gymMap} alt="Gym map" className="w-full rounded-xl" />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
