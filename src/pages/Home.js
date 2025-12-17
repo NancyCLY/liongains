@@ -105,10 +105,6 @@ function VideoPost({ video }) {
         </button>
       </div>
 
-      {/* TIMESTAMP */}
-      <div className="px-5 pb-4 text-xs text-gray-400">
-        Posted at {timeLabel}
-      </div>
     </article>
   );
 }
