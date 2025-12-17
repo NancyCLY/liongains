@@ -414,7 +414,7 @@ export default function Chats() {
 
   return (
     // <div className="min-h-screen bg-slate-50 pb-10">
-      <div className="max-w-lg mx-auto px-5">
+      <div className="max-w-lg mx-auto px-5 pb-32">
         <h1 className="text-2xl font-semibold text-center">My Chats</h1>
         <p className="text-slate-500 text-sm text-center mt-1">
           See your matches and requests.
