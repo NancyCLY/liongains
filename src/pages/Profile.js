@@ -1,14 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  EllipsisHorizontalIcon,
-  VideoCameraIcon,
-} from "@heroicons/react/24/outline";
+import { EllipsisHorizontalIcon } from "@heroicons/react/24/outline";
 
 import { useAuth } from "../context/AuthContext";
-import { db, storage } from "../services/firebase";
+import { db } from "../services/firebase";
 import { doc, getDoc } from "firebase/firestore";
 
+// -----------------------------
+// Helpers
+// -----------------------------
 const profileImages = require.context(
   "../assets/profile",
   false,
@@ -39,7 +39,23 @@ function formatHourLabel(hour24) {
   if (Number.isNaN(safeHour)) return String(hour24);
   const d = new Date();
   d.setHours(safeHour, 0, 0, 0);
-  return d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+  return d.toLocaleTimeString(undefined, {
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+// -----------------------------
+// HARD-CODED LIKED VIDEOS (same for ALL users)
+// -----------------------------
+const HARDCODED_LIKED_VIDEOS = [
+  { id: "D4vEmKD8u7s", title: "D4vEmKD8u7s" },
+  { id: "vI48li4UKQg", title: "vI48li4UKQg" },
+  { id: "hmTfcGvE-SY", title: "hmTfcGvE-SY" },
+];
+
+function youtubeThumb(id) {
+  return `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
 }
 
 export default function Profile() {
@@ -51,10 +67,8 @@ export default function Profile() {
 
   const [preferences, setPreferences] = useState(null);
   const [availability, setAvailability] = useState(null);
-  const [likedVideos, setLikedVideos] = useState(null);
   const [level, setLevel] = useState("");
 
-  // optional display fields
   const [displayName, setDisplayName] = useState("User");
   const [username, setUsername] = useState("User");
 
@@ -79,16 +93,13 @@ export default function Profile() {
         }
 
         const userData = userSnap.data();
-        console.log(userData);
 
-        // Keep null if missing; set to whatever is stored if present.
-        console.log(("availability" in userData));
-        console.log(userData.availability);
         if ("preferences" in userData) setPreferences(userData.preferences);
         if ("availability" in userData) setAvailability(userData.availability);
-        if ("likedVideos" in userData) setLikedVideos(userData.likedVideos);
 
-        setDisplayName(userData.displayName || currentUser.displayName || "User");
+        setDisplayName(
+          userData.displayName || currentUser.displayName || "User"
+        );
         setUsername(userData.username || currentUser.username || "User");
         setLevel(userData.experienceLevel || "");
       } catch (err) {
@@ -103,11 +114,7 @@ export default function Profile() {
   }, [currentUser]);
 
   const sortedAvailabilityEntries = useMemo(() => {
-  if (!availability || typeof availability !== "object") {
-    console.log(availability);
-    console.log("No availability data or invalid format");
-    return [];
-  }
+    if (!availability || typeof availability !== "object") return [];
 
     const entries = Object.entries(availability);
     entries.sort(([a], [b]) => a.localeCompare(b));
@@ -124,21 +131,15 @@ export default function Profile() {
     });
   }, [availability]);
 
-
   const hasPreferences = Array.isArray(preferences) && preferences.length > 0;
 
   const hasAvailability =
     sortedAvailabilityEntries.length > 0 &&
-    sortedAvailabilityEntries.some(([, hours]) => Array.isArray(hours) && hours.length > 0);
+    sortedAvailabilityEntries.some(
+      ([, hours]) => Array.isArray(hours) && hours.length > 0
+    );
 
-  console.log("hasAvailability", hasAvailability);
-
-  const showLikedVideos = Array.isArray(likedVideos) && likedVideos.length > 0;
-
-  const goToGymBuddy = () => {
-    // Change this route if your GymBuddy page path is different
-    navigate("/gymbuddy");
-  };
+  const goToGymBuddy = () => navigate("/gymbuddy");
 
   if (loading) {
     return (
@@ -187,7 +188,7 @@ export default function Profile() {
           <EllipsisHorizontalIcon className="w-5 h-5 text-gray-400" />
         </section>
 
-        {/* PREFERENCES (always show card; CTA if empty/missing) */}
+        {/* PREFERENCES */}
         <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="flex items-center justify-between gap-3 mb-3">
             <h2 className="text-sm font-semibold text-gray-800">Preferences</h2>
@@ -214,16 +215,18 @@ export default function Profile() {
               ))}
             </div>
           ) : (
-            <div className="bg-gray-50 rounded-xl p-3 text-sm text-gray-600 flex items-center justify-between gap-3">
-              <span>No preferences set yet.</span>
+            <div className="bg-gray-50 rounded-xl p-3 text-sm text-gray-600">
+              No preferences set yet.
             </div>
           )}
         </section>
 
-        {/* AVAILABILITY (always show card; CTA if empty/missing) */}
+        {/* AVAILABILITY */}
         <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="flex items-center justify-between gap-3 mb-3">
-            <h2 className="text-sm font-semibold text-gray-800">Availability</h2>
+            <h2 className="text-sm font-semibold text-gray-800">
+              Availability
+            </h2>
 
             {!hasAvailability && (
               <button
@@ -259,32 +262,39 @@ export default function Profile() {
                 ))}
             </div>
           ) : (
-            <div className="bg-gray-50 rounded-xl p-3 text-sm text-gray-600 flex items-center justify-between gap-3">
-              <span>No availability set yet.</span>
+            <div className="bg-gray-50 rounded-xl p-3 text-sm text-gray-600">
+              No availability set yet.
             </div>
           )}
         </section>
 
-        {/* LIKED VIDEOS (only show if exists + non-empty) */}
-        {showLikedVideos && (
-          <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
-            <h2 className="text-sm font-semibold text-gray-800 mb-3">
-              Liked Videos
-            </h2>
+        {/* LIKED VIDEOS — ALWAYS the same 3 for everyone */}
+        <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+          <h2 className="text-sm font-semibold text-gray-800 mb-3">
+            Liked Videos
+          </h2>
 
-            <div className="space-y-2">
-              {likedVideos.map((videoId) => (
-                <div
-                  key={videoId}
-                  className="bg-gray-100 rounded-xl px-4 py-3 text-sm text-gray-700 flex items-center gap-3"
-                >
-                  <VideoCameraIcon className="w-5 h-5 text-gray-500" />
-                  <span className="truncate">{videoId}</span>
+          <div className="space-y-3">
+            {HARDCODED_LIKED_VIDEOS.map((v) => (
+              <div
+                key={v.id}
+                className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl"
+              >
+                <img
+                  src={youtubeThumb(v.id)}
+                  alt="thumbnail"
+                  className="w-20 h-14 rounded-lg object-cover"
+                />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-900 truncate">
+                    {v.title}
+                  </p>
+                  <p className="text-xs text-gray-500">Liked video</p>
                 </div>
-              ))}
-            </div>
-          </section>
-        )}
+              </div>
+            ))}
+          </div>
+        </section>
       </div>
     </div>
   );
