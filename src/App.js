@@ -15,6 +15,7 @@ import Navbar from "./components/Navbar";
 
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
+import ScrollToTop from "./components/ScrollToTop";
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
 
         {/* Page content */}
         <div className="pt-8 min-h-screen">
+          <ScrollToTop />
           <Routes>
             {/* Public routes */}
             <Route path="/login" element={<Login />} />
