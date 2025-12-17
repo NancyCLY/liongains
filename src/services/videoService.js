@@ -2,87 +2,90 @@ import {
   collection,
   query,
   orderBy,
+  getDocs,
   limit,
   startAfter,
-  getDocs,
-  doc,
-  setDoc,
-  deleteDoc,
-  getDoc,
-  increment,
-  updateDoc,
-  serverTimestamp,
 } from "firebase/firestore";
 import { db } from "./firebase";
 
 /* -------------------------------------------------------------------------- */
-/*                             VIDEO QUERIES                                  */
+/*                               HOME FEED API                                */
 /* -------------------------------------------------------------------------- */
 
-export async function fetchInitialVideos(pageSize = 5) {
+/**
+ * Fetch initial videos for Home page
+ * @param {number} limitCount
+ * @returns {Promise<{videos: any[], lastDoc: any|null}>}
+ */
+export async function fetchInitialVideos(limitCount = 5) {
   const q = query(
     collection(db, "videos"),
     orderBy("createdAt", "desc"),
-    limit(pageSize)
+    limit(limitCount)
   );
 
   const snap = await getDocs(q);
 
-  return {
-    videos: snap.docs.map((d) => ({ id: d.id, ...d.data() })),
-    lastDoc: snap.docs[snap.docs.length - 1] || null,
-  };
+  const videos = snap.docs.map((d) => ({
+    id: d.id,
+    ...d.data(),
+  }));
+
+  const lastDoc = snap.docs[snap.docs.length - 1] || null;
+
+  return { videos, lastDoc };
 }
 
-export async function fetchMoreVideos(lastDoc, pageSize = 5) {
-  if (!lastDoc) {
-    return { videos: [], lastDoc: null };
-  }
+/**
+ * Fetch more videos for Home page (pagination)
+ * @param {any} lastDoc
+ * @param {number} limitCount
+ * @returns {Promise<{videos: any[], lastDoc: any|null}>}
+ */
+export async function fetchMoreVideos(lastDoc, limitCount = 5) {
+  if (!lastDoc) return { videos: [], lastDoc: null };
 
   const q = query(
     collection(db, "videos"),
     orderBy("createdAt", "desc"),
     startAfter(lastDoc),
-    limit(pageSize)
+    limit(limitCount)
   );
 
   const snap = await getDocs(q);
 
-  return {
-    videos: snap.docs.map((d) => ({ id: d.id, ...d.data() })),
-    lastDoc: snap.docs[snap.docs.length - 1] || null,
-  };
+  const videos = snap.docs.map((d) => ({
+    id: d.id,
+    ...d.data(),
+  }));
+
+  const newLastDoc = snap.docs[snap.docs.length - 1] || null;
+
+  return { videos, lastDoc: newLastDoc };
 }
 
-/* -------------------- LIKE VIDEO -------------------- */
-export async function likeVideo(videoId, userId) {
-  const likeRef = doc(db, "videos", videoId, "likes", userId);
-  const videoRef = doc(db, "videos", videoId);
+/* -------------------------------------------------------------------------- */
+/*                               SEARCH PAGE API                              */
+/* -------------------------------------------------------------------------- */
 
-  await setDoc(likeRef, {
-    likedAt: serverTimestamp(),
-  });
+/**
+ * Fetch videos for Search page.
+ * Firestore does NOT support partial text search on title,
+ * so we fetch a batch and filter client-side in Search.js.
+ * @param {number} limitCount
+ * @returns {Promise<any[]>}
+ */
+export async function fetchVideosForSearch(limitCount = 50) {
+  const q = query(
+    collection(db, "videos"),
+    orderBy("createdAt", "desc"),
+    limit(limitCount)
+  );
 
-  await updateDoc(videoRef, {
-    likeCount: increment(1),
-  });
-}
+  const snapshot = await getDocs(q);
 
-/* -------------------- UNLIKE VIDEO -------------------- */
-export async function unlikeVideo(videoId, userId) {
-  const likeRef = doc(db, "videos", videoId, "likes", userId);
-  const videoRef = doc(db, "videos", videoId);
-
-  await deleteDoc(likeRef);
-
-  await updateDoc(videoRef, {
-    likeCount: increment(-1),
-  });
-}
-
-/* -------------------- CHECK IF USER LIKED -------------------- */
-export async function hasUserLiked(videoId, userId) {
-  const likeRef = doc(db, "videos", videoId, "likes", userId);
-  const snap = await getDoc(likeRef);
-  return snap.exists();
+  return snapshot.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+  }));
 }

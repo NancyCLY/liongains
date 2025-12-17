@@ -1,48 +1,59 @@
-import React, { useState, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import { fetchVideosForSearch } from "../services/VideoService";
 
 export default function Search() {
   /* --------------------------------------------------------------------------
      STATE
   -------------------------------------------------------------------------- */
   const [query, setQuery] = useState("");
-  const [activeMuscle, setActiveMuscle] = useState("Upper body");
-  const [activeLocation, setActiveLocation] = useState("1st floor");
-  const [alphabetical, setAlphabetical] = useState(true);
-
-  /* Sample data (“Recently Searched”) */
-  const machines = [
-    { name: "Chest Press", group: "Upper body", location: "2nd floor" },
-    { name: "Leg Press", group: "Lower body", location: "1st floor" },
-    { name: "Treadmill", group: "Cardio", location: "3rd floor" },
-  ];
+  const [activeMuscle, setActiveMuscle] = useState(null);
+  const [activeLocation, setActiveLocation] = useState(null);
+  const [alphabetical, setAlphabetical] = useState(false);
+  const [videos, setVideos] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   /* --------------------------------------------------------------------------
-     FILTERED LIST
+     FETCH VIDEOS ON LOAD
   -------------------------------------------------------------------------- */
-  const filteredMachines = useMemo(() => {
-    let list = machines;
+  useEffect(() => {
+    async function load() {
+      const data = await fetchVideosForSearch();
+      setVideos(data);
+      setLoading(false);
+    }
+    load();
+  }, []);
 
+  /* --------------------------------------------------------------------------
+     FILTER + SEARCH LOGIC (CORRECTED)
+  -------------------------------------------------------------------------- */
+  const filteredVideos = useMemo(() => {
+    let list = videos;
+
+    // 1️⃣ Text search (partial title match)
     if (query.trim()) {
-      list = list.filter((m) =>
-        m.name.toLowerCase().includes(query.toLowerCase())
-      );
+      const q = query.toLowerCase();
+      list = list.filter((v) => v.title?.toLowerCase().includes(q));
     }
 
+    // 2️⃣ Muscle group filter (tags)
     if (activeMuscle) {
-      list = list.filter((m) => m.group === activeMuscle);
+      list = list.filter((v) => v.tags?.includes(activeMuscle));
     }
 
+    // 3️⃣ Location filter (ALSO tags)
     if (activeLocation) {
-      list = list.filter((m) => m.location === activeLocation);
+      list = list.filter((v) => v.tags?.includes(activeLocation));
     }
 
+    // 4️⃣ Sorting
     if (alphabetical) {
-      list = [...list].sort((a, b) => a.name.localeCompare(b.name));
+      list = [...list].sort((a, b) => a.title.localeCompare(b.title));
     }
 
     return list;
-  }, [query, activeMuscle, activeLocation, alphabetical]);
+  }, [videos, query, activeMuscle, activeLocation, alphabetical]);
 
   /* --------------------------------------------------------------------------
      PILL COMPONENT
@@ -69,7 +80,7 @@ export default function Search() {
   -------------------------------------------------------------------------- */
   return (
     <div className="pt-8 pb-28 bg-white">
-
+      {/* HEADER */}
       <header className="fixed top-0 left-0 w-full bg-white border-b z-40">
         <div className="relative h-14 flex items-center px-4 max-w-md mx-auto">
           <h1 className="absolute left-1/2 -translate-x-1/2 text-2xl font-semibold text-gray-900">
@@ -77,17 +88,10 @@ export default function Search() {
           </h1>
         </div>
       </header>
-      <div className="max-w-md mx-auto px-5">
-        {/* Title */}
-        {/* <h1 className="text-2xl font-semibold text-center text-gray-900">
-          Search
-        </h1>
-        <p className="text-sm text-center text-gray-500 mt-1">
-          Search your machine
-        </p> */}
 
-        {/* Search bar */}
-        <div className="flex items-center gap-3">
+      <div className="max-w-md mx-auto px-5 mt-16">
+        {/* SEARCH BAR */}
+        <div className="flex items-center gap-3 mt-4">
           <div className="relative flex-1">
             <MagnifyingGlassIcon className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
             <input
@@ -104,7 +108,7 @@ export default function Search() {
           </button>
         </div>
 
-        {/* Sorting options */}
+        {/* SORTING OPTIONS */}
         <section className="mt-6">
           <h2 className="text-sm font-semibold text-gray-700 mb-3">
             Sorting Options:
@@ -117,21 +121,16 @@ export default function Search() {
                 Muscle group
               </p>
               <div className="flex gap-2">
-                <Pill
-                  label="Upper body"
-                  active={activeMuscle === "Upper body"}
-                  onClick={() => setActiveMuscle("Upper body")}
-                />
-                <Pill
-                  label="Lower body"
-                  active={activeMuscle === "Lower body"}
-                  onClick={() => setActiveMuscle("Lower body")}
-                />
-                <Pill
-                  label="Cardio"
-                  active={activeMuscle === "Cardio"}
-                  onClick={() => setActiveMuscle("Cardio")}
-                />
+                {["Upper body", "Lower body", "Cardio"].map((m) => (
+                  <Pill
+                    key={m}
+                    label={m}
+                    active={activeMuscle === m}
+                    onClick={() =>
+                      setActiveMuscle(activeMuscle === m ? null : m)
+                    }
+                  />
+                ))}
               </div>
             </div>
 
@@ -139,21 +138,16 @@ export default function Search() {
             <div>
               <p className="text-sm font-medium text-gray-800 mb-2">Location</p>
               <div className="flex gap-2">
-                <Pill
-                  label="1st floor"
-                  active={activeLocation === "1st floor"}
-                  onClick={() => setActiveLocation("1st floor")}
-                />
-                <Pill
-                  label="2nd floor"
-                  active={activeLocation === "2nd floor"}
-                  onClick={() => setActiveLocation("2nd floor")}
-                />
-                <Pill
-                  label="3rd floor"
-                  active={activeLocation === "3rd floor"}
-                  onClick={() => setActiveLocation("3rd floor")}
-                />
+                {["1st floor", "2nd floor", "3rd floor"].map((l) => (
+                  <Pill
+                    key={l}
+                    label={l}
+                    active={activeLocation === l}
+                    onClick={() =>
+                      setActiveLocation(activeLocation === l ? null : l)
+                    }
+                  />
+                ))}
               </div>
             </div>
 
@@ -165,33 +159,44 @@ export default function Search() {
               <Pill
                 label="A–Z"
                 active={alphabetical}
-                onClick={() => setAlphabetical(true)}
+                onClick={() => setAlphabetical((v) => !v)}
               />
             </div>
           </div>
         </section>
 
-        {/* Recently searched */}
+        {/* RESULTS */}
         <section className="mt-6">
-          <h2 className="text-sm font-semibold text-gray-700 mb-2">
-            Recently Searched:
-          </h2>
+          <h2 className="text-sm font-semibold text-gray-700 mb-2">Results:</h2>
 
-          {filteredMachines.length === 0 ? (
-            <p className="text-sm italic text-gray-500">No machines found.</p>
+          {loading ? (
+            <p className="text-sm text-gray-400">Loading…</p>
+          ) : filteredVideos.length === 0 ? (
+            <p className="text-sm italic text-gray-500">No videos found.</p>
           ) : (
             <div className="space-y-3">
-              {filteredMachines.map((m, i) => (
+              {filteredVideos.map((v) => (
                 <div
-                  key={i}
+                  key={v.id}
                   className="flex items-center gap-4 p-4 bg-white border border-gray-200 rounded-2xl"
                 >
-                  <div className="w-12 h-12 rounded-lg bg-gray-200" />
+                  {/* Thumbnail */}
+                  <img
+                    src={`https://img.youtube.com/vi/${v.youtubeId}/hqdefault.jpg`}
+                    alt={v.title}
+                    className="w-14 h-14 rounded-lg object-cover"
+                  />
+
+                  {/* Info */}
                   <div>
                     <p className="text-sm font-medium text-gray-900">
-                      {m.name}
+                      {v.title}
                     </p>
-                    <p className="text-xs text-gray-500">{m.group}</p>
+                    <div className="flex flex-wrap gap-2 text-xs text-gray-500">
+                      {v.tags?.map((tag) => (
+                        <span key={tag}>{tag}</span>
+                      ))}
+                    </div>
                   </div>
                 </div>
               ))}
