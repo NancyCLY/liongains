@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback, useRef } from "react";
 import { PlusIcon, HeartIcon } from "@heroicons/react/24/solid";
 import lionIcon from "../assets/lion-blue.png";
 
-import { fetchInitialVideos, fetchMoreVideos } from "../services/VideoService";
+import { fetchInitialVideos, fetchMoreVideos } from "../services/videoService";
 
 /* -------------------------------------------------------------------------- */
 /*                              VIDEO CARD                                    */

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
-import { fetchVideosForSearch } from "../services/VideoService";
+import { fetchVideosForSearch } from "../services/videoService";
 
 export default function Search() {
   /* --------------------------------------------------------------------------
