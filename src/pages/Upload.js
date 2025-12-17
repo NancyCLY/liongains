@@ -120,7 +120,7 @@ export default function Upload() {
       <form onSubmit={handleSubmit} className="space-y-4">
         <input
           type="text"
-          className="border rounded px-3 py-2 w-full"
+          className="border rounded-full px-3 py-2 w-full"
           placeholder="Video title (e.g. Leg Press Setup)"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
@@ -128,7 +128,7 @@ export default function Upload() {
 
         <input
           type="url"
-          className="border rounded px-3 py-2 w-full"
+          className="border rounded-full px-3 py-2 w-full"
           placeholder="YouTube URL (e.g. https://www.youtube.com/watch?v=...)"
           value={youtubeUrl}
           onChange={(e) => setYoutubeUrl(e.target.value)}
@@ -136,7 +136,7 @@ export default function Upload() {
 
         <input
           type="text"
-          className="border rounded px-3 py-2 w-full"
+          className="border rounded-full px-3 py-2 w-full"
           placeholder="Tags (comma separated, e.g. Legs, Machine, Beginner)"
           value={tags}
           onChange={(e) => setTags(e.target.value)}
@@ -148,7 +148,7 @@ export default function Upload() {
         <button
           type="submit"
           disabled={loading}
-          className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-60"
+          className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-60 rounded-full"
         >
           {loading ? "Saving..." : "Save Video"}
         </button>
