@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { MagnifyingGlassIcon, XMarkIcon, MapIcon } from "@heroicons/react/24/outline";
 import { fetchVideosForSearch } from "../services/videoService";
 import gymMap from "../assets/gym-map.png"; // 👈 put your map image here
 
@@ -77,19 +77,29 @@ export default function Search() {
      RENDER
   -------------------------------------------------------------------------- */
   return (
-    <div className="pt-8 pb-28 bg-white">
-      {/* HEADER */}
-      <header className="fixed top-0 left-0 w-full bg-white border-b z-40">
-        <div className="relative h-14 flex items-center px-4 max-w-md mx-auto">
-          <h1 className="absolute left-1/2 -translate-x-1/2 text-2xl font-semibold text-gray-900">
-            Search
+    <div className="pb-28">
+      <div className="max-w-md mx-auto px-5 relative">
+        <div className="relative flex items-center justify-center">
+          <h1 className="text-2xl font-semibold text-center text-gray-900">
+          Search
           </h1>
-        </div>
-      </header>
 
-      <div className="max-w-md mx-auto px-5 mt-16">
-        {/* SEARCH BAR */}
-        <div className="flex items-center gap-3 mt-4">
+          <button
+            type="button"
+            onClick={() => setShowMap(true)} // 👈 OPEN MODAL
+            className="absolute right-0 flex h-10 w-10 items-center justify-center rounded-full hover:bg-gray-100 transition"
+            aria-label="Open map"
+            title="Map"
+          >
+            <MapIcon className="h-6 w-6 text-blue-400 text-blue-400" />
+          </button>
+          </div>
+          <p className="text-sm text-center text-gray-500 mt-1">
+          Search your machine.
+        </p>
+
+        {/* Search bar */}
+         <div className="pt-8 flex items-center gap-3">
           <div className="relative flex-1">
             <MagnifyingGlassIcon className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
             <input
@@ -100,13 +110,6 @@ export default function Search() {
               className="w-full h-11 pl-11 pr-4 rounded-full border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100"
             />
           </div>
-
-          <button
-            onClick={() => setShowMap(true)} // 👈 OPEN MODAL
-            className="h-11 px-5 rounded-full border border-gray-200 text-sm font-medium text-gray-700"
-          >
-            Map
-          </button>
         </div>
 
         {/* SORTING OPTIONS */}

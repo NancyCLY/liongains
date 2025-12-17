@@ -17,7 +17,7 @@ import { db } from "./firebase";
  * @param {number} limitCount
  * @returns {Promise<{videos: any[], lastDoc: any|null}>}
  */
-export async function fetchInitialVideos(limitCount = 5) {
+export async function fetchInitialVideos(limitCount = 7) {
   const q = query(
     collection(db, "videos"),
     orderBy("createdAt", "desc"),
