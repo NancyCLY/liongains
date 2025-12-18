@@ -135,8 +135,6 @@ export default function MyBuddies() {
     loadBuddies();
   }, [currentUser]);
 
-  // ---------- Firestore actions ----------
-
   async function handleRemoveMatch(buddy) {
     if (!currentUser) return;
 
@@ -288,8 +286,6 @@ export default function MyBuddies() {
     alert(`Start chat with ${buddy.name}`);
   }
 
-  // ---------- UI components ----------
-
   function BuddyCard({ buddy, label, topRight, bottomRight }) {
     const initials = getInitials(buddy.name || buddy.email);
 
@@ -363,8 +359,6 @@ export default function MyBuddies() {
       </div>
     );
   }
-
-  // ---------- Rendering ----------
 
   if (loading) {
     return (
@@ -563,15 +557,6 @@ export default function MyBuddies() {
                       ]}
                     />
                   }
-                  // bottomRight={
-                  //   <button
-                  //     type="button"
-                  //     onClick={() => handleCancelRequest(buddy)}
-                  //     className="px-4 py-1.5 rounded-full text-xs font-semibold bg-red-50 text-red-600 border border-red-200 hover:bg-red-100"
-                  //   >
-                  //     Cancel
-                  //   </button>
-                  // }
                 />
               ))}
             </div>

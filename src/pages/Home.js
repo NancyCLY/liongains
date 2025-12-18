@@ -2,13 +2,7 @@ import React, { useEffect, useState, useCallback, useRef } from "react";
 import { PlusIcon, HeartIcon } from "@heroicons/react/24/solid";
 import lionIcon from "../assets/lion-blue.png";
 import { useNavigate } from "react-router-dom";
-
-
 import { fetchInitialVideos, fetchMoreVideos } from "../services/videoService";
-
-/* -------------------------------------------------------------------------- */
-/*                              VIDEO CARD                                    */
-/* -------------------------------------------------------------------------- */
 
 const avatars = require.context(
   "../assets/profile",
@@ -51,7 +45,6 @@ function VideoPost({ video }) {
     <article className="bg-white border-b">
       {/* USER ROW */}
       <div className="flex items-center gap-3 px-5 pt-2">
-        {/* <div className="w-9 h-9 rounded-full bg-gray-300" /> */}
         <img
           src={getAvatarSrc(posterId) ?? "/default-avatar.png"}
           alt="User avatar"
@@ -111,9 +104,6 @@ function VideoPost({ video }) {
   );
 }
 
-/* -------------------------------------------------------------------------- */
-/*                             SKELETON CARD                                   */
-/* -------------------------------------------------------------------------- */
 function SkeletonPost() {
   return (
     <div className="animate-pulse bg-white border-b">
@@ -136,9 +126,6 @@ function SkeletonPost() {
   );
 }
 
-/* -------------------------------------------------------------------------- */
-/*                                HOME PAGE                                    */
-/* -------------------------------------------------------------------------- */
 export default function Home() {
   const [videos, setVideos] = useState([]);
   const [lastDoc, setLastDoc] = useState(null);

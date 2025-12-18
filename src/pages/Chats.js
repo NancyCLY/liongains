@@ -137,8 +137,6 @@ export default function Chats() {
     loadBuddies();
   }, [currentUser]);
 
-  // ---------- Firestore actions ----------
-
   async function handleRemoveMatch(buddy) {
     if (!currentUser) return;
 
@@ -295,14 +293,11 @@ export default function Chats() {
 
   }
 
-  // ---------- UI components ----------
-
   function BuddyCard({ buddy, label, topRight, bottomRight }) {
     const initials = getInitials(buddy.name || buddy.email);
 
     return (
     <article className="bg-white rounded-2xl shadow-sm border border-slate-100 px-6 py-4 flex gap-5">
-      {/* Avatar */}
       <div className="flex-shrink-0 flex items-center justify-center">
         <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 overflow-hidden shadow-sm">
           <img
@@ -316,9 +311,7 @@ export default function Chats() {
         </div>
       </div>
 
-      {/* Content + right rail */}
       <div className="flex-1 min-w-0 flex">
-        {/* Left content */}
         <div className="flex-1 min-w-0">
           <h2 className="text-sm font-semibold text-slate-900 truncate">
             {buddy.name}
@@ -333,14 +326,11 @@ export default function Chats() {
           )}
         </div>
 
-        {/* Right rail: SAME right edge for ... and Chat */}
         <div className="ml-4 w-[96px] flex flex-col items-end">
-          {/* Align ... with username (approx) */}
           <div className="h-5 flex items-center justify-end">
             {topRight}
           </div>
 
-          {/* Push button to the bottom like before */}
           <div className="mt-auto">{bottomRight}</div>
         </div>
       </div>
@@ -383,8 +373,6 @@ export default function Chats() {
     );
   }
 
-  // ---------- Rendering ----------
-
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 pt-20 pb-10">
@@ -413,7 +401,6 @@ export default function Chats() {
     outgoingRequests.length === 0;
 
   return (
-    // <div className="min-h-screen bg-slate-50 pb-10">
       <div className="max-w-lg mx-auto px-5 pb-32">
         <h1 className="text-2xl font-semibold text-center">My Chats</h1>
         <p className="text-slate-500 text-sm text-center mt-1">
@@ -582,21 +569,11 @@ export default function Chats() {
                       ]}
                     />
                   }
-                  // bottomRight={
-                  //   <button
-                  //     type="button"
-                  //     onClick={() => handleCancelRequest(buddy)}
-                  //     className="px-5 py-1.5 rounded-full text-xs font-semibold bg-red-50 text-red-600 border border-red-200 hover:bg-red-100"
-                  //   >
-                  //     Cancel
-                  //   </button>
-                  // }
                 />
               ))}
             </div>
           </section>
         )}
       </div>
-    // </div>
   );
 }

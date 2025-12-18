@@ -1,10 +1,3 @@
-// src/pages/MeetOtherGymBuddies.js
-// Similar styling to your other LionGains pages (Tailwind + rounded cards)
-// - Loads users from Firestore
-// - Filters out blocked buddies (both directions)
-// - Shows up to 5
-// - Back button navigates to "Find a Gym Buddy" page
-
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { db } from "../services/firebase";
@@ -59,7 +52,6 @@ export default function MeetOtherGymBuddies() {
         setLoading(true);
         setError("");
 
-        // 1) Load me
         const meRef = doc(db, "users", currentUser.uid);
         const meSnap = await getDoc(meRef);
 
@@ -70,11 +62,8 @@ export default function MeetOtherGymBuddies() {
 
         const meData = meSnap.data();
 
-        // Your existing structure
         const myBlocked = new Set(meData.blockedBuddies || []);
 
-        // Also exclude people you already interacted with (optional but usually desired)
-        // If you want ONLY blocked filtering, you can remove these.
         const outgoingMap = meData.outgoingRequests || {};
         const incomingMap = meData.incomingRequests || {};
         const myMatchesMap = meData.buddyMatches || {};
@@ -85,7 +74,6 @@ export default function MeetOtherGymBuddies() {
           ...Object.keys(myMatchesMap),
         ]);
 
-        // 2) Load all users
         const usersSnap = await getDocs(collection(db, "users"));
 
         const list = [];
@@ -95,15 +83,12 @@ export default function MeetOtherGymBuddies() {
 
           const data = uDoc.data();
 
-          // Filter: I blocked them
           if (myBlocked.has(id)) return;
 
-          // Filter: they blocked me (mutual exclusion)
           const theirBlocked = data.blockedBuddies || [];
           if (Array.isArray(theirBlocked) && theirBlocked.includes(currentUser.uid))
             return;
 
-          // Optional: don’t show if already requested/matched/etc.
           if (alreadyTouched.has(id)) return;
 
           list.push({
@@ -114,7 +99,6 @@ export default function MeetOtherGymBuddies() {
           });
         });
 
-        // 3) Show only 5 (demo)
         setBuddies(list.slice(0, 5));
       } catch (err) {
         console.error("Error loading buddies:", err);
@@ -134,18 +118,16 @@ export default function MeetOtherGymBuddies() {
   ]);
 
   function handleChat(buddy) {
-    // TODO: Replace with real chat navigation
     alert(`Start chat with ${buddy.name}`);
   }
 
   return (
     <div className="min-h-screen bg-slate-50 pb-10">
       <div className="max-w-lg mx-auto px-4">
-        {/* Header with back */}
         <div className="relative flex items-center justify-center h-12">
           <button
             type="button"
-            onClick={() => navigate("/gymbuddy")} // <-- adjust route to your "Find a Gym Buddy" page
+            onClick={() => navigate("/gymbuddy")}
             className="absolute left-0 p-2 rounded-full hover:bg-slate-100 text-slate-600"
             aria-label="Back"
             title="Back"
@@ -164,7 +146,6 @@ export default function MeetOtherGymBuddies() {
           Reach out to schedule your first work session!
         </p>
 
-        {/* Content */}
         <div className="mt-6 space-y-4">
           {loading && (
             <p className="text-sm text-slate-500 text-center">Loading…</p>
@@ -184,7 +165,6 @@ export default function MeetOtherGymBuddies() {
                   key={buddy.id}
                   className="bg-white rounded-2xl shadow-sm border border-slate-100 px-5 py-4 flex items-center gap-4"
                 >
-                  {/* Avatar */}
                     <div className="flex-shrink-0">
                       <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white font-semibold text-lg shadow-sm">
                         <img
@@ -197,7 +177,6 @@ export default function MeetOtherGymBuddies() {
                         />
                       </div>
                     </div>
-                  {/* Text */}
                   <div className="flex-1 min-w-0">
                     <h2 className="text-base font-semibold text-slate-900 truncate">
                       {buddy.name}
@@ -216,8 +195,6 @@ export default function MeetOtherGymBuddies() {
                       </div>
                     )}
                   </div>
-
-                  {/* Chat icon */}
                   <button
                     type="button"
                     onClick={() => handleChat(buddy)}

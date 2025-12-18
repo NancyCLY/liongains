@@ -7,20 +7,6 @@ import { useAuth } from "../context/AuthContext";
 function Login() {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
-
-  // Redirect if already signed in
-  /*
-  useEffect(() => {
-    if (currentUser) {
-      navigate("/");
-    }
-  }, [currentUser, navigate]);
-
-  //The logic is no longer necessary 
-  //because protected routes handle all redirection now.
-  
-  */
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
@@ -31,7 +17,7 @@ function Login() {
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      navigate("/"); // redirect on success
+      navigate("/");
     } catch (error) {
       setErrorMsg("Incorrect email or password.");
     }

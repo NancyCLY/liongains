@@ -30,7 +30,7 @@ Feature pages are scaffolded with TODO instructions for teammates to implement n
 ---
 
 ### 3. Global Navigation Bar
-- Fully implemented desktop-friendly top navbar
+- Fully implemented desktop-friendly bottom navbar
 - Light blue styling consistent across pages
 - Icons + labels change appearance based on active route
 - Appears on all pages except Login
@@ -41,78 +41,22 @@ Feature pages are scaffolded with TODO instructions for teammates to implement n
 ### 4. Routing Structure
 All major app routes are created and functional:
 
-| Route        | Status               |
-|--------------|----------------------|
-| `/`          | Scaffolded (Home)    |
-| `/search`    | Scaffolded           |
-| `/upload`    | Scaffolded           |
-| `/gymbuddy`  | Scaffolded           |
-| `/profile`   | Scaffolded           |
-| `/login`     | Fully implemented    |
+| Route        |
+|--------------|
+| `/`          |
+| `/search`    |
+| `/upload`    |
+| `/chats`     |
+| `/gymbuddy`  |
+| `/profile`   |
+| `/login`     |
 
 ---
 
 ## Page Frameworks
 Each page includes:
 - A functional layout wrapper  
-- Navbar spacing  
-- A clear TODO comment block  
-- Placeholder UI  
-
-Pages left to be implemented:
-- **Home**
-- **Search**
-- **GymBuddy**
-- **Profile**
-- **Upload**
-
----
-
-## 2. To-Dos
-
-### Home Page
-- Fetch video feed from Firestore (`videos` collection)
-- Render `<VideoCard />` list
-- Implement infinite scrolling
-- Add tag filter functionality
-- Implement Settings button actions
-- Replace placeholder content
-
----
-
-### Search Page
-- Build search bar UI
-- Add filter chips (machines / body parts)
-- Render results list (machines or videos)
-- Debounced search logic
-- Possible integration with Firestore
-
----
-
-### GymBuddy Page
-- Build weekly availability grid UI
-- Save availability to Firestore
-- Implement matching algorithm
-- Show matched buddies list
-
----
-
-### Profile Page
-- Display user info (name, avatar, stats)
-- Edit profile UI
-- Display user’s uploaded videos
-- Add logout button
-
----
-
-### Upload Page
-- Build upload form
-- Upload videos to Firebase Storage
-- Save metadata (title, tags, timestamp) to Firestore
-- Implement progress bar
-- Tag selection UI (machine categories)
-
----
+- Navbar spacing   
 
 ## 🚀 Getting Started (Local Development)
 
@@ -128,9 +72,33 @@ npm install
 ```
 
 ### 3. Create your .env.local file
-We are using the same Firebase project that I have set up. Create a .env.local file in the project's root directory and copy/paste the credentails that I sent via email.
+All of the firebase api key and login information is located in the .env.local file. If the file does not exist, rename the env.local file to .env.local. The file MUST be called .env.local in order for the app to be connected to the backend Firebase.
 
 ### 4. Start the development server
 ```bash
 npm start
 ```
+
+### 5. Where/how to use app
+Even though we use React to create the app, this app was designed to be used on mobile. After npm start, you should see the following message:
+
+You can now view liongains in the browser.
+
+Local:            http://localhost:3000
+On Your Network:  http://192.xxx.x.x:3000
+
+Once the app is running, please view the app on a phone by typing the "On Your Network" link into your browser on the phone. You should be on the same Wifi as your laptop which is running the app.
+
+### 6. Testing users
+Since we do not have signup as a part of our functionality, all of our test users are created through login and manually inputting into the Firebase backend. You will not be able to see pages like Profile and buddy matching unless you are logged in. 
+
+Some example test user logins and passwords to try:
+
+username: 123456@gmail.com
+password: 123456
+
+username: user4@gmail.com
+password: liongainspassword
+
+username: user6@gmail.com
+password: liongainspassword

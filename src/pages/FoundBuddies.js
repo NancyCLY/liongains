@@ -1,5 +1,3 @@
-// src/pages/FoundBuddies.js
-
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -16,7 +14,7 @@ import {
 import { db } from "../services/firebase";
 
 const DAY_LABELS = ["Su", "M", "Tu", "W", "Th", "F", "Sa"];
-const MAX_BUDDIES_TOTAL = 5; // total buddies a user can reach out to
+const MAX_BUDDIES_TOTAL = 5;
 
 // ---------- Helpers ----------
 
@@ -87,8 +85,6 @@ function formatHour12(hour24) {
   return `${h}`;
 }
 
-// ---------- Component ----------
-
 export default function FoundBuddies() {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
@@ -96,13 +92,12 @@ export default function FoundBuddies() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const [buddies, setBuddies] = useState([]); // [{ id, name, preferences, overlappingSessions, overlapCount }]
-  const [showAllSessions, setShowAllSessions] = useState({}); // buddyId -> bool
-  const [selectedSessionByBuddy, setSelectedSessionByBuddy] = useState({}); // buddyId -> sessionId
+  const [buddies, setBuddies] = useState([]);
+  const [showAllSessions, setShowAllSessions] = useState({}); 
+  const [selectedSessionByBuddy, setSelectedSessionByBuddy] = useState({});
 
-  // now represents buddyIds you've already requested (from map keys)
   const [existingReachedOutIds, setExistingReachedOutIds] = useState(new Set());
-  const [newReachedOutIds, setNewReachedOutIds] = useState(new Set()); // from this screen
+  const [newReachedOutIds, setNewReachedOutIds] = useState(new Set());
 
   const [openMenuBuddyId, setOpenMenuBuddyId] = useState(null);
 
@@ -131,21 +126,15 @@ export default function FoundBuddies() {
         console.log(userData.availability);
         const currentAvailability = userData.availability || {};
 
-        // ✅ outgoing/incoming are MAPS now
-        const outgoingMap = userData.outgoingRequests || {}; // { [buddyId]: {session...} }
-        const incomingMap = userData.incomingRequests || {}; // { [buddyId]: {session...} }  (keyed by buddyId on *your* doc)
-        const matchesMap = userData.buddyMatches || {}; // { [buddyId]: {...} }
+        const outgoingMap = userData.outgoingRequests || {};
+        const incomingMap = userData.incomingRequests || {};
+        const matchesMap = userData.buddyMatches || {};
 
         const reachedOutSet = new Set(Object.keys(outgoingMap));
         setExistingReachedOutIds(reachedOutSet);
 
         const blockedList = userData.blockedBuddies || [];
-        const blockedSet = new Set(blockedList);
 
-        // ✅ Build ONE exclude set:
-        // - blocked
-        // - already requested (either direction)
-        // - already matched
         const excludeSet = new Set([
           ...blockedList,
           ...Object.keys(outgoingMap),
@@ -160,12 +149,11 @@ export default function FoundBuddies() {
         usersSnap.forEach((buddyDoc) => {
           const buddyId = buddyDoc.id;
 
-          if (buddyId === currentUser.uid) return; // skip self
-          if (excludeSet.has(buddyId)) return; // ✅ skip blocked/requested/matched
+          if (buddyId === currentUser.uid) return;
+          if (excludeSet.has(buddyId)) return;
 
           const data = buddyDoc.data();
 
-          // ✅ ALSO skip if THEY blocked ME
           const theyBlockedMe =
             (data.blockedBuddies || []).includes(currentUser.uid);
           if (theyBlockedMe) return;
@@ -215,7 +203,7 @@ export default function FoundBuddies() {
   function handleSelectSession(buddyId, sessionId) {
     setSelectedSessionByBuddy((prev) => ({
       ...prev,
-      [buddyId]: prev[buddyId] === sessionId ? null : sessionId, // toggle
+      [buddyId]: prev[buddyId] === sessionId ? null : sessionId,
     }));
   }
 
@@ -267,8 +255,6 @@ export default function FoundBuddies() {
         `You reached out to ${buddy.name} for session: ${chosenSession.label}`
       );
 
-      // Optional: immediately remove from the list after reaching out
-      // setBuddies((prev) => prev.filter((b) => b.id !== buddyId));
     } catch (err) {
       console.error("Error reaching out:", err);
       alert("There was an error sending your request.");
@@ -304,8 +290,6 @@ export default function FoundBuddies() {
     setOpenMenuBuddyId(null);
   }
 
-  // ---------- Render ----------
-
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 pb-10">
@@ -331,8 +315,7 @@ export default function FoundBuddies() {
   return (
     <div className="min-h-screen bg-slate-50 pb-10">
       <div className="max-w-lg mx-auto px-4">
-        {/* Header */}
-        {/* Header */}
+
       <div className="relative mb-2">
         <button
           type="button"
@@ -353,8 +336,6 @@ export default function FoundBuddies() {
         Based on your latest availability.
       </p>
 
-
-        {/* Buddy list */}
         <div className="mt-6 space-y-4">
           {buddies.map((buddy) => {
             const showAll = !!showAllSessions[buddy.id];
@@ -385,15 +366,8 @@ export default function FoundBuddies() {
                 key={buddy.id}
                 className="bg-white rounded-full shadow-sm border border-slate-100 px-6 py-5 flex gap-8"
               >
-                {/* Avatar */}
                 <div className="flex-shrink-0 flex items-center justify-center">
                   <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white font-semibold text-lg shadow-sm">
-                    {/* {buddy.name
-                      .split(" ")
-                      .map((w) => w[0])
-                      .join("")
-                      .slice(0, 2)
-                      .toUpperCase()} */}
                       <img
                         src={getProfileImageSrc(buddy.id)}
                         alt={buddy.name}
@@ -477,7 +451,6 @@ export default function FoundBuddies() {
                   </div>
 
                   <div className="flex flex-col justify-between items-end ml-4 mr-6">
-                    {/* Menu */}
                     <div className="relative">
                       <button
                         type="button"
@@ -503,7 +476,6 @@ export default function FoundBuddies() {
                       )}
                     </div>
 
-                    {/* Reach out button */}
                     <button
                       type="button"
                       onClick={() => handleReachOut(buddy)}

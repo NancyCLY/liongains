@@ -1,16 +1,3 @@
-/*
-  GYMBUDDY PAGE
-
-  TODO:
-  1. Build weekly availability UI grid.
-  2. Save user availability to Firestore ("availability" collection).
-  3. Implement "Match Me" logic for pairing users.
-  4. Create “Buddies List” preview section.
-
-  Note:
-  Navbar already implemented globally.
-*/
-
 import { useEffect, useState } from 'react';
 import { useAuth } from "../context/AuthContext";
 import { db, storage } from "../services/firebase";
@@ -222,7 +209,7 @@ export default function GymBuddy() {
         preferences: preferences, // e.g. ["legs-day", "mornings", "cardio"]
         updatedAt: new Date(),
       },
-      { merge: true } // 👈 creates the doc if it doesn't exist, updates if it does
+      { merge: true }
     );
   }
 
@@ -237,15 +224,12 @@ export default function GymBuddy() {
       const dayInfo = dayMap[isoDate];
 
       return {
-        isoDate,                 // "2025-12-12"
-        time,                    // "6:00PM"
-        dayLabel: dayInfo?.label,       // "F"
-        dateLabel: dayInfo?.displayDate // "Dec 12"
+        isoDate,
+        time,
+        dayLabel: dayInfo?.label,
+        dateLabel: dayInfo?.displayDate
       };
     });
-
-    // Example: if you later send this via email or Firestore
-    // await someApiCall({ slots: slotsForSaving });
 
     if (!slotsForSaving.length) {
       alert("Please select at least one time slot.");
@@ -320,9 +304,6 @@ export default function GymBuddy() {
 
       {/* Availability card */}
       <section className="mt-4 bg-white rounded-xl shadow-sm border overflow-hidden">
-        {/* <div className="px-3 py-2 border-b">
-          <h2 className="font-semibold text-sm">Your Availability</h2>
-        </div> */}
 
         {/* Whole grid can scroll horizontally, time rows scroll vertically */}
         <div className="overflow-x-auto">
@@ -331,7 +312,6 @@ export default function GymBuddy() {
             <div className="grid grid-cols-8 text-xs text-center font-medium bg-white border-b rounded-tl-full rounded-tr-full">
               <div className="py-2" />
               {DAYS.map((day) => (
-                
                 <div key={day.id} className="py-1 flex flex-col items-center justify-center">
                   <span className="font-semibold">{day.label}</span>
                   <span className="text-[10px] text-gray-500">
@@ -341,7 +321,6 @@ export default function GymBuddy() {
               ))}
             </div>
 
-            {/* Scrollable body – THIS is what makes it shorter on mobile */}
             <div className="max-h-64 overflow-y-auto">
               {TIMES.map((time, timeIdx) => (
                 <div
@@ -355,7 +334,7 @@ export default function GymBuddy() {
 
                   {/* Slots */}
                   {DAYS.map((day, dayIdx) => {
-                    const dayId = day.id; // "YYYY-MM-DD"
+                    const dayId = day.id;
                     const key = `${dayId}|${time}`;
                     const isSelected = selectedSlots.has(key);
 
@@ -435,9 +414,6 @@ export default function GymBuddy() {
           <button type="button" className="text-sm font-semibold text-gray-800">
             Meet buddies
           </button>
-          {/* <button type="button" className="text-xs text-blue-600 hover:underline">
-            View all
-          </button> */}
 
           <button
             type="button"

@@ -28,7 +28,6 @@ export default function ChatRoom() {
   const [draftMessage, setDraftMessage] = useState("");
 
 
-  // Try to use buddy passed from Chats page; fallback to fetch if user refreshes
   const buddyFromState = location.state?.buddy;
 
   const [buddy, setBuddy] = useState(buddyFromState || null);
@@ -146,14 +145,13 @@ export default function ChatRoom() {
             </h2>
 
             <p className="mt-1 text-xs text-slate-500 max-w-xs">
-              You and {buddy.name} haven’t started chatting yet.
+              You and {buddy.name} haven't started chatting yet.
               Send the first message when chat is enabled.
             </p>
           </div>
         </div>
       </div>
 
-      {/* Input (non-functional but typeable) */}
       <div className="fixed bottom-16 left-0 right-0 bg-slate-50 border-t border-slate-200">
         <div className="max-w-lg mx-auto px-5 py-3 flex items-center gap-2">
           <input

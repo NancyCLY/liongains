@@ -1,23 +1,18 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { MagnifyingGlassIcon, XMarkIcon, MapIcon } from "@heroicons/react/24/outline";
 import { fetchVideosForSearch } from "../services/videoService";
-import gymMap from "../assets/gym-map.png"; // 👈 put your map image here
+import gymMap from "../assets/gym-map.png";
 
 export default function Search() {
-  /* --------------------------------------------------------------------------
-     STATE
-  -------------------------------------------------------------------------- */
   const [query, setQuery] = useState("");
   const [activeMuscle, setActiveMuscle] = useState(null);
   const [activeLocation, setActiveLocation] = useState(null);
   const [alphabetical, setAlphabetical] = useState(false);
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showMap, setShowMap] = useState(false); // 👈 NEW
+  const [showMap, setShowMap] = useState(false);
 
-  /* --------------------------------------------------------------------------
-     FETCH VIDEOS
-  -------------------------------------------------------------------------- */
+
   useEffect(() => {
     async function load() {
       const data = await fetchVideosForSearch();
@@ -27,9 +22,6 @@ export default function Search() {
     load();
   }, []);
 
-  /* --------------------------------------------------------------------------
-     SEARCH + FILTER LOGIC
-  -------------------------------------------------------------------------- */
   const filteredVideos = useMemo(() => {
     let list = videos;
 
@@ -53,9 +45,7 @@ export default function Search() {
     return list;
   }, [videos, query, activeMuscle, activeLocation, alphabetical]);
 
-  /* --------------------------------------------------------------------------
-     PILL
-  -------------------------------------------------------------------------- */
+
   function Pill({ label, active, onClick }) {
     return (
       <button
@@ -73,9 +63,7 @@ export default function Search() {
     );
   }
 
-  /* --------------------------------------------------------------------------
-     RENDER
-  -------------------------------------------------------------------------- */
+
   return (
     <div className="pb-28">
       <div className="max-w-md mx-auto px-5 relative">
@@ -86,7 +74,7 @@ export default function Search() {
 
           <button
             type="button"
-            onClick={() => setShowMap(true)} // 👈 OPEN MODAL
+            onClick={() => setShowMap(true)}
             className="absolute right-0 flex h-10 w-10 items-center justify-center rounded-full hover:bg-gray-100 transition"
             aria-label="Open map"
             title="Map"

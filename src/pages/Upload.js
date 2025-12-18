@@ -3,13 +3,6 @@ import { db } from "../services/firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { useAuth } from "../context/AuthContext";
 
-/*
-  UPLOAD PAGE — YouTube-based version
-
-  This page lets users register a YouTube link as a "video" in Firestore.
-  Actual video hosting is handled by YouTube.
-*/
-
 export default function Upload() {
   const { currentUser } = useAuth();
   const [title, setTitle] = useState("");

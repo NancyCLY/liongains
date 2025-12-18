@@ -1,14 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { EllipsisHorizontalIcon } from "@heroicons/react/24/outline";
-
 import { useAuth } from "../context/AuthContext";
 import { db } from "../services/firebase";
 import { doc, getDoc } from "firebase/firestore";
 
-// -----------------------------
-// Helpers
-// -----------------------------
 const profileImages = require.context(
   "../assets/profile",
   false,
@@ -45,9 +41,6 @@ function formatHourLabel(hour24) {
   });
 }
 
-// -----------------------------
-// HARD-CODED LIKED VIDEOS (same for ALL users)
-// -----------------------------
 const HARDCODED_LIKED_VIDEOS = [
   { id: "D4vEmKD8u7s", title: "D4vEmKD8u7s" },
   { id: "vI48li4UKQg", title: "vI48li4UKQg" },
@@ -268,7 +261,6 @@ export default function Profile() {
           )}
         </section>
 
-        {/* LIKED VIDEOS — ALWAYS the same 3 for everyone */}
         <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <h2 className="text-sm font-semibold text-gray-800 mb-3">
             Liked Videos
