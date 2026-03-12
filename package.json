@@ -1,6 +1,7 @@
 {
   "name": "liongains",
   "version": "0.1.0",
+  "homepage": "https://nancycly.github.io",
   "private": true,
   "dependencies": {
     "@dataconnect/generated": "file:src/dataconnect-generated",
@@ -21,6 +22,8 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
