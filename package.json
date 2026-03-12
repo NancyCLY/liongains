@@ -1,7 +1,7 @@
 {
   "name": "liongains",
   "version": "0.1.0",
-  "homepage": "https://nancycly.github.io",
+  "homepage": "https://nancycly.github.io/liongains/",
   "private": true,
   "dependencies": {
     "@dataconnect/generated": "file:src/dataconnect-generated",
